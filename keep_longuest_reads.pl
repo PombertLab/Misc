@@ -154,6 +154,7 @@ sub n50{
     ## Average
     my $sum;
     foreach (@len){$sum += $_;}
+    print "Total number of bases: $sum\n";
     my $large = sprintf("%.0f", $len[0]); print "Largest read = $large nt\n";
     my $small = sprintf("%.0f", $len[$#len]); print "Smallest read = $small nt\n";
     my $average = sprintf("%.0f", ($sum/$num_reads)); print "Average read size = $average nt\n";
