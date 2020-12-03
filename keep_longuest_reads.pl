@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 ## Pombert JF, Illinois Tech - 2020
-my $version = '0.3';
+my $version = '0.4';
 my $name = 'keep_longuest_reads.pl';
 
 use strict; use warnings; use Getopt::Long qw(GetOptions);
@@ -27,6 +27,7 @@ USAGE
 
 die "$usage\n" unless@ARGV;
 
+my @commands = @ARGV;
 my $fastq;
 my $output;
 my $min;
@@ -43,6 +44,12 @@ GetOptions(
 open FASTQ1, "<", "$fastq";
 open FASTQ2, "<", "$fastq";
 open OUT, ">", "$output";
+open LOG, ">", "$output.log";
+
+## Log file
+my $stime = `date`; chomp $stime;
+print LOG "COMMAND: $name @commands\n";
+print LOG "Started on $stime\n";
 
 ## parsing by minimum length
 if ($min){
@@ -121,6 +128,9 @@ elsif ($depth){
     n50($output, @subset);
 }
 
+my $etime = `date`; chomp $etime;
+print LOG "Ended on: $etime\n";
+
 ### subroutines
 sub n50{
     my $file = shift @_;
@@ -135,10 +145,10 @@ sub n50{
     my $median_pos = $num_reads/2;
     if ($median_pos =~ /^\d+$/){$median = $len[$median_pos];}
     else {
-        my $med1 = int($median_pos);
+    	my $med1 = int($median_pos);
         my $med2 = $med1 + 1;
         $median = (($len[$med1] + $len[$med2])/2);
-    }
+    }  
 
     ## Average
     my $sum;
