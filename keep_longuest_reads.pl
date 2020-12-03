@@ -153,10 +153,10 @@ sub n50{
     ## Average
     my $sum;
     foreach (@len){$sum += $_;}
-    my $large = sprintf("%.0f", $len[0]); print "Largest read = $large\n";
-    my $small = sprintf("%.0f", $len[$#len]); print "Smallest read = $small\n";
+    my $large = sprintf("%.0f", $len[0]); print "Largest read = $large nt\n";
+    my $small = sprintf("%.0f", $len[$#len]); print "Smallest read = $small nt\n";
     my $average = sprintf("%.0f", ($sum/$num_reads)); print "Average read size = $average nt\n";
-    $median = sprintf("%.0f", $median); print "Median read size = $median\n";    
+    $median = sprintf("%.0f", $median); print "Median read size = $median nt\n";    
 
     ## N50, N75, N90
     my $n50_td = $sum*0.5; my $n75_td = $sum*0.75; my $n90_td = $sum*0.9;
