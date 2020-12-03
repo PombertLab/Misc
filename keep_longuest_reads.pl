@@ -139,6 +139,7 @@ sub n50{
     @len = reverse @len; ## from largest to smallest
     
     print "\n## Metrics for dataset $file\n\n";
+    print "Number of reads: $num_reads\n";
     
     ## Median
     my $median;
