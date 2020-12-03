@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 ## Pombert JF, Illinois Tech - 2020
-my $version = '0.4';
+my $version = '0.5';
 my $name = 'keep_longuest_reads.pl';
 
 use strict; use warnings; use Getopt::Long qw(GetOptions);
@@ -133,14 +133,17 @@ print LOG "Ended on: $etime\n";
 
 ### subroutines
 sub n50{
+    my @fh = (*LOG, *STDOUT);
     my $file = shift @_;
     my $num_reads = scalar @_;
     my @len = sort @_; ## sort by size
     @len = reverse @len; ## from largest to smallest
     
-    print "\n## Metrics for dataset $file\n\n";
     my $nreads = commify($num_reads);
-    print "Number of reads: $nreads\n";
+    foreach (@fh){
+        print $_ "\n## Metrics for dataset $file\n\n";
+        print $_ "Number of reads: $nreads\n";
+    }
     
     ## Median
     my $median;
@@ -153,15 +156,20 @@ sub n50{
     }  
 
     ## Average
-    my $sum;
-    foreach (@len){$sum += $_;}
+    my $sum; foreach (@len){$sum += $_;}
     my $fsum = commify($sum);
-    print "Total number of bases: $fsum\n";
-    my $large = sprintf("%.0f", $len[0]); $large = commify($large); print "Largest read = $large nt\n";
-    my $small = sprintf("%.0f", $len[$#len]); $small = commify($small); print "Smallest read = $small nt\n";
-    my $average = sprintf("%.0f", ($sum/$num_reads)); $average = commify($average); print "Average read size = $average nt\n";
-    $median = sprintf("%.0f", $median); $median = commify($median); print "Median read size = $median nt\n";
-
+    my $large = sprintf("%.0f", $len[0]); $large = commify($large);
+    my $small = sprintf("%.0f", $len[$#len]); $small = commify($small);
+    my $average = sprintf("%.0f", ($sum/$num_reads)); $average = commify($average);
+    $median = sprintf("%.0f", $median); $median = commify($median);
+    foreach (@fh){
+        print $_ "Total number of bases: $fsum\n";
+        print $_ "Largest read = $large nt\n";
+        print $_ "Smallest read = $small nt\n";
+        print $_ "Average read size = $average nt\n";
+        print $_ "Median read size = $median nt\n";
+    }
+    
     ## N50, N75, N90
     my $n50_td = $sum*0.5; my $n75_td = $sum*0.75; my $n90_td = $sum*0.9;
     my $n50; my $n75, my $n90;
@@ -172,7 +180,7 @@ sub n50{
     $n50 = sprintf ("%.0f", $n50); $n50 = commify($n50);
     $n75 = sprintf ("%.0f", $n75); $n75 = commify($n75);
     $n90 = sprintf ("%.0f", $n90); $n90 = commify($n90);
-    print "N50 = $n50 nt\n"."N75 = $n75 nt\n"."N90 = $n90 nt\n"."\n";
+    foreach (@fh){print $_ "N50 = $n50 nt\n"."N75 = $n75 nt\n"."N90 = $n90 nt\n"."\n";}
 }
 
 sub commify { ## From the Perl Cookbook; O'Reilly
