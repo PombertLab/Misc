@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 ## Pombert JF, Illinois Tech - 2020
-my $version = '0.2';
+my $version = '0.3';
 my $name = 'keep_longuest_reads.pl';
 
 use strict; use warnings; use Getopt::Long qw(GetOptions);
@@ -130,13 +130,24 @@ sub n50{
     
     print "\n## Metrics for dataset $file\n\n";
     
+    ## Median
+    my $median;
+    my $median_pos = $num_reads/2;
+    if ($median_pos =~ /^\d+$/){$median = $len[$median_pos];}
+    else {
+        my $med1 = int($median_pos);
+        my $med2 = $med1 + 1;
+        $median = (($len[$med1] + $len[$med2])/2);
+    }
+
     ## Average
     my $sum;
     foreach (@len){$sum += $_;}
     my $large = sprintf("%.0f", $len[0]); print "Largest read = $large\n";
     my $small = sprintf("%.0f", $len[$#len]); print "Smallest read = $small\n";
     my $average = sprintf("%.0f", ($sum/$num_reads)); print "Average read size = $average nt\n";
-    
+    $median = sprintf("%.0f", $median); print "Median read size = $median\n";    
+
     ## N50, N75, N90
     my $n50_td = $sum*0.5; my $n75_td = $sum*0.75; my $n90_td = $sum*0.9;
     my $n50; my $n75, my $n90;
