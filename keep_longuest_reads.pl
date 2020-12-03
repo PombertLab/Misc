@@ -1,6 +1,6 @@
 #!/usr/bin/perl
-## Pombert JF, Illinois Tech - 2019
-my $version = '0.1';
+## Pombert JF, Illinois Tech - 2020
+my $version = '0.2';
 my $name = 'keep_longuest_reads.pl';
 
 use strict; use warnings; use Getopt::Long qw(GetOptions);
@@ -40,21 +40,28 @@ GetOptions(
 	's|size=i' => \$genome_size
 );
 
-open FASTQ1, "<$fastq";
-open FASTQ2, "<$fastq";
-open OUT, ">$output";
+open FASTQ1, "<", "$fastq";
+open FASTQ2, "<", "$fastq";
+open OUT, ">", "$output";
 
 ## parsing by minimum length
 if ($min){
-	my %reads; my $count = 0; my $read;
+    my @lengths; my @subset; my %reads; my $count = 0; my $read;
 	while (my $line = <FASTQ1>){
 		chomp $line;
 		if ($count == 0){$read = $line; $reads{$read}[0] = $line; $count++;} ## Read name
-		elsif ($count == 1){$reads{$read}[1] = $line; $count++;} ## Read sequence
+		elsif ($count == 1){ ## Read sequence
+            $reads{$read}[1] = $line;
+            my $len = sprintf("%09d", length($line)); ## Adding leading zeroes to help sort array
+            push (@lengths, $len);
+            $count++;
+        }
 		elsif ($count == 2){$count++;} ## Skipping + sign
 		elsif ($count == 3){
 			$reads{$read}[2] = $line; ## Quality score
 			if (length($reads{$read}[1]) >= $min){
+                my $keep = sprintf("%09d", length($reads{$read}[1]));
+                push (@subset, $keep);
 				print OUT "$reads{$read}[0]\n";
 				print OUT "$reads{$read}[1]\n";
 				print OUT '+'."\n";
@@ -63,9 +70,11 @@ if ($min){
 			$count = 0; %reads = (); ## Clearing read db to minimize memory usage
 		}
 	}
+    n50($fastq, @lengths);
+    n50($output, @subset);
 }
 elsif ($depth){
-	my @lengths; my $count = 0;
+    my @lengths; my $count = 0;
 	## Pass 1 - Calculating metrics; doing two independent passes to avoid loading the full FASTQ file in memory
 	while (my $line = <FASTQ1>){
 		chomp $line;
@@ -81,15 +90,15 @@ elsif ($depth){
 	@lengths = sort @lengths; ## sort by size
 	@lengths = reverse @lengths; ## from largest to smallest
 	my $len_threshold; my $sum;
-	while (my $x = shift @lengths){
-		if ($sum <= ($depth*$genome_size)){$len_threshold = $x;}
-		$sum += $x;
+	foreach (@lengths){
+		if ($sum <= ($depth*$genome_size)){$len_threshold = $_;}
+		$sum += $_;
 	}
 	$len_threshold = sprintf("%0d", $len_threshold);
 	print "\nMinimum read size for ${depth}X sequencing depth at estimated genome size of $genome_size bp = $len_threshold bp\n";
 	print "Saving reads of at least $len_threshold bp to $output\n\n";
 	## Pass 2 - Parsing reads
-	$count = 0; my $read; my %reads; 
+	$count = 0; my $read; my %reads; my @subset;
 	while (my $line = <FASTQ2>){
 		chomp $line;
 		if ($count == 0){$read = $line; $reads{$read}[0] = $line; $count++;} ## Read name
@@ -98,6 +107,8 @@ elsif ($depth){
 		elsif ($count == 3){
 			$reads{$read}[2] = $line; ## Quality score
 			if (length($reads{$read}[1]) >= $len_threshold){
+                my $keep = sprintf("%09d", length($reads{$read}[1]));
+                push (@subset, $keep);
 				print OUT "$reads{$read}[0]\n";
 				print OUT "$reads{$read}[1]\n";
 				print OUT '+'."\n";
@@ -106,4 +117,33 @@ elsif ($depth){
 			$count = 0; %reads = (); ## Clearing read db to minimize memory usage
 		}
 	}
+    n50($fastq, @lengths);
+    n50($output, @subset);
+}
+
+### subroutines
+sub n50{
+    my $file = shift @_;
+    my $num_reads = scalar @_;
+    my @len = sort @_; ## sort by size
+    @len = reverse @len; ## from largest to smallest
+    
+    print "\n## Metrics for dataset $file\n\n";
+    
+    ## Average
+    my $sum;
+    foreach (@len){$sum += $_;}
+    my $large = sprintf("%.0f", $len[0]); print "Largest read = $large\n";
+    my $small = sprintf("%.0f", $len[$#len]); print "Smallest read = $small\n";
+    my $average = sprintf("%.0f", ($sum/$num_reads)); print "Average read size = $average nt\n";
+    
+    ## N50, N75, N90
+    my $n50_td = $sum*0.5; my $n75_td = $sum*0.75; my $n90_td = $sum*0.9;
+    my $n50; my $n75, my $n90;
+    my $nsum50 = 0; my $nsum75 = 0; my $nsum90 = 0;
+    foreach (@len){$nsum50 += $_; if ($nsum50 >= $n50_td){$n50 = $_; last;}}
+    foreach (@len){$nsum75 += $_; if ($nsum75 >= $n75_td){$n75 = $_; last;}}
+    foreach (@len){$nsum90 += $_; if ($nsum90 >= $n75_td){$n90 = $_; last;}}
+    $n50 = sprintf ("%.0f", $n50); $n75 = sprintf ("%.0f", $n75); $n90 = sprintf ("%.0f", $n90);
+    print "N50 = $n50 nt\n"."N75 = $n75 nt\n"."N90 = $n90 nt\n"."\n";
 }
