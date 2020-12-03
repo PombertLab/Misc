@@ -177,6 +177,6 @@ sub n50{
 
 sub commify { ## From the Perl Cookbook; O'Reilly
     my $text = reverse $_[0];
-    $text =~ s/(\d3)(?=\d)(?!\d*\.)/$1,/g;
+    $text =~ s/(\d{3})(?=\d)(?!\d*\.)/$1,/g;
     return scalar reverse $text;
 }
