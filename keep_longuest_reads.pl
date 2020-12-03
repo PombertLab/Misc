@@ -139,7 +139,8 @@ sub n50{
     @len = reverse @len; ## from largest to smallest
     
     print "\n## Metrics for dataset $file\n\n";
-    print "Number of reads: $num_reads\n";
+    my $nreads = commify($num_reads);
+    print "Number of reads: $nreads\n";
     
     ## Median
     my $median;
@@ -154,11 +155,12 @@ sub n50{
     ## Average
     my $sum;
     foreach (@len){$sum += $_;}
-    print "Total number of bases: $sum\n";
-    my $large = sprintf("%.0f", $len[0]); print "Largest read = $large nt\n";
-    my $small = sprintf("%.0f", $len[$#len]); print "Smallest read = $small nt\n";
-    my $average = sprintf("%.0f", ($sum/$num_reads)); print "Average read size = $average nt\n";
-    $median = sprintf("%.0f", $median); print "Median read size = $median nt\n";    
+    my $fsum = commify($sum);
+    print "Total number of bases: $fsum\n";
+    my $large = sprintf("%.0f", $len[0]); $large = commify($large); print "Largest read = $large nt\n";
+    my $small = sprintf("%.0f", $len[$#len]); $small = commify($small); print "Smallest read = $small nt\n";
+    my $average = sprintf("%.0f", ($sum/$num_reads)); $average = commify($average); print "Average read size = $average nt\n";
+    $median = sprintf("%.0f", $median); $median = commify($median); print "Median read size = $median nt\n";
 
     ## N50, N75, N90
     my $n50_td = $sum*0.5; my $n75_td = $sum*0.75; my $n90_td = $sum*0.9;
@@ -167,6 +169,14 @@ sub n50{
     foreach (@len){$nsum50 += $_; if ($nsum50 >= $n50_td){$n50 = $_; last;}}
     foreach (@len){$nsum75 += $_; if ($nsum75 >= $n75_td){$n75 = $_; last;}}
     foreach (@len){$nsum90 += $_; if ($nsum90 >= $n75_td){$n90 = $_; last;}}
-    $n50 = sprintf ("%.0f", $n50); $n75 = sprintf ("%.0f", $n75); $n90 = sprintf ("%.0f", $n90);
+    $n50 = sprintf ("%.0f", $n50); $n50 = commify($n50);
+    $n75 = sprintf ("%.0f", $n75); $n75 = commify($n75);
+    $n90 = sprintf ("%.0f", $n90); $n90 = commify($n90);
     print "N50 = $n50 nt\n"."N75 = $n75 nt\n"."N90 = $n90 nt\n"."\n";
+}
+
+sub commify {
+    my $text = reverse $_[0];
+    $text =~ s/(\d\d\d)(?=\d)(?!\d*\.)/$1,/g;
+    return scalar reverse $text;
 }
