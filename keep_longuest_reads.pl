@@ -175,8 +175,8 @@ sub n50{
     print "N50 = $n50 nt\n"."N75 = $n75 nt\n"."N90 = $n90 nt\n"."\n";
 }
 
-sub commify {
+sub commify { ## From the Perl Cookbook; O'Reilly
     my $text = reverse $_[0];
-    $text =~ s/(\d\d\d)(?=\d)(?!\d*\.)/$1,/g;
+    $text =~ s/(\d3)(?=\d)(?!\d*\.)/$1,/g;
     return scalar reverse $text;
 }
