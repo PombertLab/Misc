@@ -10,7 +10,7 @@ my $usage = <<"USAGE";
 
 NAME		$name
 VERSION		$version
-SYNOPSIS	Parses FASTQ file to keep the longuest reads by size of desired sequencing depth.
+SYNOPSIS	Parses FASTQ file to keep the longuest reads by size or desired sequencing depth.
                 Useful for large Nanopore or PacBio FASTQ datasets.
 
 EXAMPLE1	$name -i file.fastq -o parsed.10k.fastq -m 10000
