@@ -11,9 +11,10 @@ my $usage = <<"USAGE";
 NAME		$name
 VERSION		$version
 SYNOPSIS	Parses FASTQ file to keep the longuest reads.
-		Useful for large Nanopore or PacBio FASTQ datasets.
-EXAMPLE1		keep_longuest_reads.pl -i file.fastq -o parsed.10k.fastq -m 10000
-EXAMPLE2		keep_longuest_reads.pl -i file.fastq -o parsed.100X.fastq -d 100 -s 3000000 
+                Useful for large Nanopore or PacBio FASTQ datasets.
+
+EXAMPLE1	$name -i file.fastq -o parsed.10k.fastq -m 10000
+EXAMPLE2	$name -i file.fastq -o parsed.100x.fastq -d 100 -s 3000000
 
 OPTIONS
 -i (--input)	Input file in FASTQ format
