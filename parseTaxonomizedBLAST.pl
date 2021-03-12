@@ -2,23 +2,24 @@
 ## Pombert Lab, IIT 2019
 my $name = 'parseTaxonomizedBLAST.pl';
 my $version = '0.2';
+my $updated = '12/03/2021';
 
 use strict; use warnings; use Getopt::Long qw(GetOptions);
 
 my $usage = <<"OPTIONS";
-
-NAME		$name
-VERSION		$version
+NAME		${name}
+VERSION		${version}
+UPDATED		${updated}
 SYNOPSIS	Parses the content of taxonomized BLAST searches
 REQUIREMENT	-outfmt '6 qseqid sseqid qstart qend pident length bitscore evalue staxids sscinames sskingdoms sblastnames'
 
-USAGE		parseTaxonomizedBLAST.pl \\
-		-b *.outfmt.6 \\
-		-f *.fasta \\
-		-n Streptococcus 'Streptococcus suis' 'Streptococcus sp.'
-		-e 1e-25 \\
-		-o output.fasta
-		-v
+USAGE		${name} \\
+		  -b *.outfmt.6 \\
+		  -f *.fasta \\
+		  -n Streptococcus 'Streptococcus suis' 'Streptococcus sp.'
+		  -e 1e-25 \\
+		  -o output.fasta \\
+		  -v
 
 OPTIONS:
 -b (--blast)	## BLAST input file(s)
@@ -29,9 +30,8 @@ OPTIONS:
 -e (--evalue)	## Evalue cutoff for target organism(s) [Default: 1e-10]
 -o (--output)	## FASTA output file containing the desired sequences
 -v (--verbose)	## Verbose [Default: off]
-
 OPTIONS
-die "$usage\n" unless @ARGV;
+die "\n$usage\n" unless @ARGV;
 
 my @blast;
 my @fasta;
@@ -59,7 +59,7 @@ unless (($column eq 'sscinames')||($column eq 'sskingdoms')||($column eq 'sblast
 ### Creating db of sequences from FASTA files
 my %sequences;
 for my $fasta (@fasta){
-	open FASTA, "<$fasta";
+	open FASTA, "<", "$fasta" or die "Can't open file $fasta: $!\n";
 	my $name;
 	while (my $line = <FASTA>){
 		chomp $line;
@@ -74,7 +74,7 @@ my %scinames; for my $names (@target){$scinames{$names} = $name;}
 ### Parsing BLAST 'outfmt 6' file(s)
 my %blasts;
 while (my $blast = shift@blast){
-	open BLAST, "<$blast";
+	open BLAST, "<", "$blast" or die "Can't open file $blast: $!\n";
 	while (my $line = <BLAST>){
 		chomp $line;
 		my @columns = split("\t", $line);
@@ -90,7 +90,7 @@ while (my $blast = shift@blast){
 		else{for (0..$#columns){$blasts{$blast}{$query}[$_] = $columns[$_];}}
 	}
 }
-open OUT, ">$output";
+open OUT, ">", "$output" or die "Can't create file $output: $!\n";
 my @blasts = sort (keys %blasts); 
 for my $blast (@blasts) {
     for my $query (sort (keys %{$blasts{$blast}})){

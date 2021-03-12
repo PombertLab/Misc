@@ -1,20 +1,21 @@
 #!/usr/bin/perl
 ## Pombert JF, Illinois Tech - 2020
-my $version = '0.5';
+my $version = '0.5a';
 my $name = 'keep_longest_reads.pl';
+my $updated = '12/03/2021';
 
 use strict; use warnings; use Getopt::Long qw(GetOptions);
 
 ## Usage definition
 my $usage = <<"USAGE";
-
-NAME		$name
-VERSION		$version
+NAME		${name}
+VERSION		${version}
+UPDATED		${updated}
 SYNOPSIS	Parses FASTQ file to keep the longest reads by size or desired sequencing depth.
-                Useful for large Nanopore or PacBio FASTQ datasets.
+		Useful for large Nanopore or PacBio FASTQ datasets.
 
-EXAMPLE1	$name -i file.fastq -o parsed.10k.fastq -m 10000
-EXAMPLE2	$name -i file.fastq -o parsed.100x.fastq -d 100 -s 3000000
+EXAMPLE1	${name} -i file.fastq -o parsed.10k.fastq -m 10000
+EXAMPLE2	${name} -i file.fastq -o parsed.100x.fastq -d 100 -s 3000000
 
 OPTIONS
 -i (--input)	Input file in FASTQ format
@@ -25,8 +26,7 @@ OPTIONS
 
 NOTE: -m and -d are mutually exclusive
 USAGE
-
-die "$usage\n" unless@ARGV;
+die "\n$usage\n" unless@ARGV;
 
 my @commands = @ARGV;
 my $fastq;

@@ -1,21 +1,15 @@
 #!/usr/bin/perl
 ## Pombert Lab, IIT 2019
 my $name = 'runTaxonomizedBLAST.pl';
-my $version = '0.2';
-
-## Requirements:
-## BLAST 2.2.28+ or later
-## NCBI taxonomony database (ftp://ftp.ncbi.nlm.nih.gov/blast/db/taxdb.tar.gz)
-## NCBI NR/NT databases (ftp://ftp.ncbi.nlm.nih.gov/blast/db/)
-## NOTE: the NCBI taxdb, nr and nt databases can be downloaded with the update_blastdb.pl from NCBI (http://www.ncbi.nlm.nih.gov/blast/docs/update_blastdb.pl)
-## The BLASTDB variable must be set in the environmental variables: export BLASTDB=/path/to/NCBI/TaxDB:/path/to/NCBI/NR:/path/to/NCBI/NT
+my $version = '0.2a';
+my $updated = '12/03/2021';
 
 use strict; use warnings; use Getopt::Long qw(GetOptions);
 
 my $usage = <<"OPTIONS";
-
-NAME		$name
-VERSION		$version
+NAME		${name}
+VERSION		${version}
+UPDATED		${updated}
 SYNOPSIS	Runs taxonomized BLAST searches, and returns the outfmt 6 format with columns staxids, sscinames, sskingdoms, and sblastnames
 REQUIREMENTS	- BLAST 2.2.28+ or later
 		- NCBI taxonomony database (ftp://ftp.ncbi.nlm.nih.gov/blast/db/taxdb.tar.gz)
@@ -26,14 +20,14 @@ REQUIREMENTS	- BLAST 2.2.28+ or later
 NOTE		The NCBI TaxDB, nr and nt databases can be downloaded with the update_blastdb.pl from NCBI
 		http://www.ncbi.nlm.nih.gov/blast/docs/update_blastdb.pl
 
-USAGE		runTaxonomizedBLAST.pl \\
-		-t 64 \\
-		-p blastn \\
-		-a megablast \\
-		-d nr \\
-		-q *.fasta \\
-		-e 1e-10 \\
-		-c 1
+USAGE		${name} \\
+		  -t 64 \\
+		  -p blastn \\
+		  -a megablast \\
+		  -d nr \\
+		  -q *.fasta \\
+		  -e 1e-10 \\
+		  -c 1
 
 OPTIONS:
 -t (--threads)	## Number of threads [Default = 16]
@@ -44,9 +38,9 @@ OPTIONS:
 -q (--query)	## FASTA file(s) to query
 -e (--evalue)	## Evalue cutoff [Default = 1e-05]
 -c (--culling)	## Culling limit [Default = 1]
-
 OPTIONS
-die "$usage\n" unless @ARGV;
+die "\n$usage\n" unless @ARGV;
+
 ## Defining options
 my $blast_type = 'blastn';
 my $task = 'megablast';
@@ -72,14 +66,14 @@ GetOptions(
 my $algo = ''; if ($blast_type eq 'blastn'){$algo = "-task $task";}
 my $list = ''; if ($gi){$list = "-gilist $gi";}
 for my $query (@query){
-	system "$blast_type".
-		" -num_threads $threads".
-		" $algo".
-		" -query $query".
-		" -db $db".
-		" $list".
-		" -evalue $evalue".
-		" -culling_limit $culling".
-		" -outfmt '6 qseqid sseqid qstart qend pident length bitscore evalue staxids sscinames sskingdoms sblastnames'".
-		" -out $query.$blast_type.6";
+	system "$blast_type \\
+	  -num_threads $threads \\
+	  $algo \\
+	  -query $query \\
+	  -db $db \\
+	  $list \\
+	  -evalue $evalue \\
+	  -culling_limit $culling \\
+	  -outfmt '6 qseqid sseqid qstart qend pident length bitscore evalue staxids sscinames sskingdoms sblastnames' \\
+	  -out $query.$blast_type.6";
 }
