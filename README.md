@@ -10,3 +10,6 @@ Runs taxonomized BLAST searches, and returns the outfmt 6 format with columns st
 
 #### parseTaxonomizedBLAST.pl
 Parses the content of taxonomized BLAST searches
+
+#### FastqUpdate.py
+Update old fastq encoding format to new fastq encoding format
