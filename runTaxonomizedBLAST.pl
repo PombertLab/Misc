@@ -2,7 +2,7 @@
 ## Pombert Lab, IIT 2019
 my $name = 'runTaxonomizedBLAST.pl';
 my $version = '0.2a';
-my $updated = '12/03/2021';
+my $updated = '2021-03-12';
 
 use strict; use warnings; use Getopt::Long qw(GetOptions);
 

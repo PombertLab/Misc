@@ -2,7 +2,7 @@
 ## Pombert JF, Illinois Tech - 2020
 my $version = '0.5a';
 my $name = 'keep_longest_reads.pl';
-my $updated = '12/03/2021';
+my $updated = '2021-03-12';
 
 use strict; use warnings; use Getopt::Long qw(GetOptions);
 
