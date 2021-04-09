@@ -1,5 +1,5 @@
-# Misc
-#### Synopses
+## Misc
+### Synopses
 
 [FastqUpdate.py](https://github.com/PombertLab/Misc/blob/main/FastqUpdate.py) updates old Illumina FASTQ files to the new Illumina/Sanger 1.9 FASTQ encoding format. Requires biopython.
 
