@@ -6,7 +6,7 @@ from sys import exit,argv
 
 name = "FastqUpdate.py"
 version = '0.2'
-updated = '21/03/2021'
+updated = '2021-03-21'
 
 usage = f"""
 NAME		{name}
