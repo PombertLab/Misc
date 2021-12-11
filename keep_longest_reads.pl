@@ -1,10 +1,13 @@
 #!/usr/bin/perl
 ## Pombert JF, Illinois Tech - 2020
-my $version = '0.5b';
+my $version = '0.6';
 my $name = 'keep_longest_reads.pl';
-my $updated = '2021-06-16';
+my $updated = '2021-12-11';
 
-use strict; use warnings; use Getopt::Long qw(GetOptions);
+use strict;
+use warnings;
+use Getopt::Long qw(GetOptions);
+use PerIO::gzip;
 
 ## Usage definition
 my $usage = <<"USAGE";
@@ -43,8 +46,10 @@ GetOptions(
 );
 
 ## Input/Output files
-open FASTQ1, "<", "$fastq" or die "Can't open $fastq: $!\n";
-open FASTQ2, "<", "$fastq" or die "Can't open $fastq: $!\n";
+my $gzip = '';
+if ($fastq =~ /.gz$/){ $gzip = ':gzip'; }
+open FASTQ1, "<$gzip", "$fastq" or die "Can't open $fastq: $!\n";
+open FASTQ2, "<$gzip", "$fastq" or die "Can't open $fastq: $!\n";
 open OUT, ">", "$output" or die "Can't create $output: $!\n";
 open LOG, ">", "$output.log" or die "Can't create $output.log: $!\n";
 
@@ -94,6 +99,9 @@ if ($min){
 			$count = 0; %reads = (); 
 		}
 	}
+
+	if ($fastq =~ /.gz$/){ binmode FASTQ1, ":gzip(none)"; }	
+
 	n50($fastq, @lengths);
 	n50($output, @subset);
 }
@@ -115,6 +123,9 @@ elsif ($depth){
 		elsif ($count == 2){ $count++; }
 		elsif ($count == 3){ $count=0; }
 	}
+
+	if ($fastq =~ /.gz$/){ binmode FASTQ1, ":gzip(none)"; }	
+
 	@lengths = sort @lengths; ## sort by size
 	@lengths = reverse @lengths; ## from largest to smallest
 	my $len_threshold; my $sum;
@@ -162,6 +173,9 @@ elsif ($depth){
 			$count = 0; %reads = ();
 		}
 	}
+
+	if ($fastq =~ /.gz$/){ binmode FASTQ2, ":gzip(none)"; }	
+
 	n50($fastq, @lengths);
 	n50($output, @subset);
 }
