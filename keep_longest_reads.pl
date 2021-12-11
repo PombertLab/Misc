@@ -7,7 +7,7 @@ my $updated = '2021-12-11';
 use strict;
 use warnings;
 use Getopt::Long qw(GetOptions);
-use PerIO::gzip;
+use PerlIO::gzip;
 
 ## Usage definition
 my $usage = <<"USAGE";
