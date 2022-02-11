@@ -1,8 +1,8 @@
 #!/usr/bin/perl
 ## Pombert JF, Illinois Tech - 2020
-my $version = '0.6';
+my $version = '0.7';
 my $name = 'keep_longest_reads.pl';
-my $updated = '2021-12-11';
+my $updated = '2022-02-11';
 
 use strict;
 use warnings;
@@ -19,9 +19,11 @@ SYNOPSIS	Parses FASTQ file to keep the longest reads by size or desired sequenci
 
 EXAMPLE1	${name} -i file.fastq -o parsed.10k.fastq -m 10000
 EXAMPLE2	${name} -i file.fastq -o parsed.100x.fastq -d 100 -s 3000000
+EXAMPLE2	${name} -i file.fastq -x
 
 OPTIONS
 -i (--input)	Input file in FASTQ format
+-x (--metrics)	Calculate metrics only, do not create read subset
 -o (--output)	Output file name
 -m (--minimum)	Minimum read length to keep
 -d (--depth)	Desired sequencing depth (requires estimated genome size: -s)
@@ -33,25 +35,36 @@ die "\n$usage\n" unless@ARGV;
 
 my @commands = @ARGV;
 my $fastq;
+my $metrics;
 my $output;
 my $min;
 my $depth;
 my $genome_size;
 GetOptions(
 	'i|input=s' => \$fastq,
+	'x|metrics'	=> \$metrics,
 	'o|output=s' => \$output,
 	'm|minimum=i' => \$min,
 	'd|depth=i' => \$depth,
 	's|size=i' => \$genome_size
 );
 
-## Input/Output files
+## Input file
 my $gzip = '';
 if ($fastq =~ /.gz$/){ $gzip = ':gzip'; }
 open FASTQ1, "<$gzip", "$fastq" or die "Can't open $fastq: $!\n";
 open FASTQ2, "<$gzip", "$fastq" or die "Can't open $fastq: $!\n";
-open OUT, ">", "$output" or die "Can't create $output: $!\n";
-open LOG, ">", "$output.log" or die "Can't create $output.log: $!\n";
+
+## Log file
+my $logfile;
+if ($metrics){ $logfile = 'metrics.log'; }
+else  { $logfile = "$output.log"; }
+open LOG, ">", "$logfile" or die "Can't create $logfile: $!\n";
+
+## Output file
+unless ($metrics){
+	open OUT, ">", "$output" or die "Can't create $output: $!\n";
+}
 
 ## Log file
 my $stime = `date`; chomp $stime;
@@ -59,8 +72,11 @@ print LOG "COMMAND: $name @commands\n";
 print LOG "Started on $stime\n";
 
 ## parsing by minimum length
-if ($min){
+if ($min or $metrics){
+
     my @lengths; my @subset; my %reads; my $count = 0; my $read;
+
+	if ($metrics){ $min = 1; }
 
 	while (my $line = <FASTQ1>){
 		chomp $line;
@@ -90,10 +106,12 @@ if ($min){
 			if (length($reads{$read}[1]) >= $min){
 				my $keep = sprintf("%09d", length($reads{$read}[1]));
 				push (@subset, $keep);
-				print OUT "$reads{$read}[0]\n";
-				print OUT "$reads{$read}[1]\n";
-				print OUT '+'."\n";
-				print OUT "$reads{$read}[2]\n";
+				unless ($metrics){
+					print OUT "$reads{$read}[0]\n";
+					print OUT "$reads{$read}[1]\n";
+					print OUT '+'."\n";
+					print OUT "$reads{$read}[2]\n";
+				}
 			}
 			## Clearing read db to minimize memory usage
 			$count = 0; %reads = (); 
@@ -103,7 +121,9 @@ if ($min){
 	if ($fastq =~ /.gz$/){ binmode FASTQ1, ":gzip(none)"; }	
 
 	n50($fastq, @lengths);
-	n50($output, @subset);
+	unless ($metrics){
+		n50($output, @subset);
+	}
 }
 
 elsif ($depth){
@@ -181,7 +201,9 @@ elsif ($depth){
 }
 
 my $etime = `date`; chomp $etime;
-print LOG "Ended on: $etime\n";
+unless ($metrics){
+	print LOG "Ended on: $etime\n";
+}
 
 ### subroutines
 sub n50{
