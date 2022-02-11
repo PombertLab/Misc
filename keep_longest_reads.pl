@@ -17,9 +17,9 @@ UPDATED		${updated}
 SYNOPSIS	Parses FASTQ file to keep the longest reads by size or desired sequencing depth.
 		Useful for large Nanopore or PacBio FASTQ datasets.
 
-EXAMPLE1	${name} -i file.fastq -o parsed.10k.fastq -m 10000
-EXAMPLE2	${name} -i file.fastq -o parsed.100x.fastq -d 100 -s 3000000
-EXAMPLE2	${name} -i file.fastq -x
+EXAMPLE 1	${name} -i file.fastq -o parsed.10k.fastq -m 10000
+EXAMPLE 2	${name} -i file.fastq -o parsed.100x.fastq -d 100 -s 3000000
+EXAMPLE 3	${name} -i file.fastq -x
 
 OPTIONS
 -i (--input)	Input file in FASTQ format
