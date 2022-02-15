@@ -133,7 +133,7 @@ for my $blast (@blasts) {
 							print "@{$blasts{$blast}{$query}}\n";
 						}
 						$flag = 'match';
-						sequence($query);
+						fasta($query);
 					}
 				}
 				else {
@@ -143,7 +143,7 @@ for my $blast (@blasts) {
 							print "@{$blasts{$blast}{$query}}\n";
 						}
 						$flag = 'match';
-						sequence($query);
+						fasta($query);
 					}
 				}
 			}
@@ -152,7 +152,7 @@ for my $blast (@blasts) {
 }
 
 ## Subroutines
-sub sequence {
+sub fasta {
 	my $seq = $_[0];
 	print OUT ">$seq\n";
 	my @seq = unpack ("(A60)*", $sequences{$seq});
