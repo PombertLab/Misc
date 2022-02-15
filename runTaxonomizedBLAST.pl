@@ -1,10 +1,12 @@
 #!/usr/bin/perl
 ## Pombert Lab, IIT 2019
 my $name = 'runTaxonomizedBLAST.pl';
-my $version = '0.2a';
-my $updated = '2021-03-12';
+my $version = '0.3';
+my $updated = '2022-02-15';
 
-use strict; use warnings; use Getopt::Long qw(GetOptions);
+use strict;
+use warnings;
+use Getopt::Long qw(GetOptions);
 
 my $usage = <<"OPTIONS";
 NAME		${name}
@@ -30,14 +32,16 @@ USAGE		${name} \\
 		  -c 1
 
 OPTIONS:
--t (--threads)	## Number of threads [Default = 16]
 -p (--program)	## BLAST type: blastn, blastp, blastx, tblastn or tblastx [Default = blastn]
 -a (--algo)	## Blastn algorithm: blastn, dc-megablast, or megablast [Default = megablast] 
--d (--db)	## Database to query: nt, nr, or other [Default = nt]
--g (--gilist)	## Restrict search to GI list
+-t (--threads)	## Number of threads [Default = 16]
 -q (--query)	## FASTA file(s) to query
+-d (--db)	## Database to query: nt, nr, or other [Default = nt]
 -e (--evalue)	## Evalue cutoff [Default = 1e-05]
 -c (--culling)	## Culling limit [Default = 1]
+-g (--gilist)	## Restrict search to GI list
+-x (--taxids)	## Restrict search to taxids from file ## one taxid per line
+-n (--ntaxids)	## Exclude from search taxids from file ## one taxid per line
 OPTIONS
 die "\n$usage\n" unless @ARGV;
 
@@ -45,11 +49,13 @@ die "\n$usage\n" unless @ARGV;
 my $blast_type = 'blastn';
 my $task = 'megablast';
 my $db = 'nt';
-my $gi;
+my @query;
 my $threads = 16;
 my $evalue = 1e-05;
 my $culling = 1;
-my @query;
+my $gi;
+my $taxids;
+my $ntaxids;
 
 GetOptions(
     'p|program=s' => \$blast_type,
@@ -59,19 +65,37 @@ GetOptions(
 	't|threads=i' => \$threads,
 	'e|evalue=s' => \$evalue,
 	'c|culling=i' => \$culling,
-	'q|query=s@{1,}' => \@query
+	'q|query=s@{1,}' => \@query,
+	'x|taxids=s' => \$taxids,
+	'n|ntaxids=s' => \$ntaxids
 );
 
+## Checking for taxonomic restrictions, if any
+## Useful to query a subset of the NCBI databases
+my $gilist = '';
+if ($gi){
+	$gilist = "-gilist $gi";
+}
+my $taxonomic_restrictions = '';
+if ($taxids){
+	$taxonomic_restrictions = "-taxidlist $taxids";
+}
+elsif ($ntaxids){
+	$taxonomic_restrictions = "-negative_taxidlist $ntaxids";
+}
+
 ## Running BLAST
-my $algo = ''; if ($blast_type eq 'blastn'){$algo = "-task $task";}
-my $list = ''; if ($gi){$list = "-gilist $gi";}
+my $algo = '';
+if ($blast_type eq 'blastn'){ $algo = "-task $task"; }
+
 for my $query (@query){
 	system "$blast_type \\
 	  -num_threads $threads \\
 	  $algo \\
 	  -query $query \\
 	  -db $db \\
-	  $list \\
+	  $gilist \\
+	  $taxonomic_restrictions \\
 	  -evalue $evalue \\
 	  -culling_limit $culling \\
 	  -outfmt '6 qseqid sseqid qstart qend pident length bitscore evalue staxids sscinames sskingdoms sblastnames' \\
