@@ -112,7 +112,7 @@ my @blasts = sort (keys %blasts);
 for my $blast (@blasts) {
     for my $query (sort (keys %{$blasts{$blast}})){
 		
-		## Setting which column to query
+		## Setting which column to parse
 		my $regex;
 		if ($column eq 'sscinames'){ $regex = $blasts{$blast}{$query}[9]; }
 		elsif ($column eq 'sskingdoms'){ $regex = $blasts{$blast}{$query}[10]; }
