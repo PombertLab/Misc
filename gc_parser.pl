@@ -51,7 +51,7 @@ unless (-d $outdir) {
 open METRICS, ">", "$outdir/gc_metrics.tsv" or die "Can't create $outdir/gc_metrics.tsv: $!\n";
 print METRICS "# Fasta file\tContig\tLength (nt)\tAT (%)\tGC (%)\n";
 
-## Working on fasta file(s)
+## Working on FASTA file(s)
 while (my $fasta = shift @fasta){
 
 	my %sequences;
@@ -59,6 +59,7 @@ while (my $fasta = shift @fasta){
 
 	open FASTA, "<", $fasta or die "Can't open $fasta: $!\n";
 
+	## Create FASTA subsets
 	unless ($metrics){
 
 		my ($basename) = fileparse($fasta);
@@ -74,6 +75,7 @@ while (my $fasta = shift @fasta){
 	
 	}
 
+	## Creating database of sequences
 	while (my $line = <FASTA>){
 		chomp $line;
 		if ($line =~ /^>(.*)$/){
@@ -84,6 +86,7 @@ while (my $fasta = shift @fasta){
 		}
 	}
 
+	## Iterating through all contigs 
 	foreach my $contig (sort (keys %sequences)){
 
 		my $sequence = $sequences{$contig};
