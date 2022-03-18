@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 ## Pombert Lab 2022
 my $name = 'gc_parser.pl';
-my $version = 0.1;
+my $version = 0.2;
 my $updated = '2022-03-18';
 
 use strict;
@@ -27,6 +27,7 @@ OPTIONS:
 -o (--outdir)	Output directory [Default: ./]
 -u (--upper)	Upper GC (%) cutoff value [Default: 50]
 -l (--lower)	Lower GC (%) cutoff value [Default: 35]
+-m (--metrics)	Calculate metrics only ## Skip creation of fasta subsets
 USAGE
 die "\n$usage\n" unless @ARGV;
 
@@ -34,11 +35,13 @@ my @fasta;
 my $outdir = './';
 my $upper = 50;
 my $lower = 35;
+my $metrics;
 GetOptions(
 	'f|fasta=s@{1,}' => \@fasta,
 	'o|outdir=s' => \$outdir,
 	'u|upper=i' => \$upper,
-	'l|lower=i' => \$lower
+	'l|lower=i' => \$lower,
+	'm|metrics' => \$metrics
 );
 
 ## Checking for output directory
@@ -55,11 +58,21 @@ while (my $fasta = shift @fasta){
 	my $locus;
 
 	open FASTA, "<", $fasta or die "Can't open $fasta: $!\n";
-	my ($basename) = fileparse($fasta);
-	$basename =~ s/\.\w+//;
-	open UPPER, ">", "$outdir/$basename.upper.fasta" or die "Can't create $basename.upper.fasta: $!\n";
-	open LOWER, ">", "$outdir/$basename.lower.fasta" or die "Can't create $basename.lower.fasta: $!\n";
-	open MIDR, ">", "$outdir/$basename.midrange.fasta" or die "Can't create $basename.midrange.fasta: $!\n";
+
+	unless ($metrics){
+
+		my ($basename) = fileparse($fasta);
+		$basename =~ s/\.\w+//;
+
+		my $upper = "$outdir/$basename.upper.fasta";
+		my $midrange = "$outdir/$basename.midrange.fasta";
+		my $lower = "$outdir/$basename.lower.fasta";
+
+		open UPPER, ">", $upper or die "Can't create $upper: $!\n";
+		open MIDR, ">", $midrange or die "Can't create $midrange: $!\n";
+		open LOWER, ">", $lower or die "Can't create $lower: $!\n";
+	
+	}
 
 	while (my $line = <FASTA>){
 		chomp $line;
@@ -91,14 +104,16 @@ while (my $fasta = shift @fasta){
 		print METRICS $fasta."\t".$contig."\t".$seq_length."\t".$at_percentage."\t".$gc_percentage."\n";
 
 		## Writing sequences to ouput files
-		if ($gc_percentage >= $upper){
-			sequence(\*UPPER, $contig, $sequence);
-		}
-		elsif ($gc_percentage < $lower){
-			sequence(\*LOWER, $contig, $sequence);
-		}
-		else {
-			sequence(\*MIDR, $contig, $sequence);
+		unless ($metrics){
+			if ($gc_percentage >= $upper){
+				sequence(\*UPPER, $contig, $sequence);
+			}
+			elsif ($gc_percentage < $lower){
+				sequence(\*LOWER, $contig, $sequence);
+			}
+			else {
+				sequence(\*MIDR, $contig, $sequence);
+			}
 		}
 
 	}
