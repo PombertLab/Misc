@@ -26,14 +26,16 @@ EXAMPLE 3	${name} -i *.fastq -o ./KLR -m 10000 -x -j
 OPTIONS
 -i (--input)	Input file(s) in FASTQ format
 -o (--outdir)	Output directory [Default: ./]
--l (--log)		Log file name [Default: klr_metrics.log]
+-l (--log)	Log file name [Default: klr_metrics.log]
 -x (--metrics)	Calculate metrics only, do not create read subset
 -m (--minimum)	Minimum read length to keep
 -d (--depth)	Desired sequencing depth (requires estimated genome size: -s)
 -s (--size)	Expected genome size
 -j (--json)	Create .json file for multiQC
 
-NOTE: -m and -d are mutually exclusive
+NOTE #1	The -m and -d options are mutually exclusive
+NOTE #2	The -d option should only be used with single FASTQ files or from genomes
+	with very similar expected sizes
 USAGE
 die "\n$usage\n" unless@ARGV;
 
