@@ -59,11 +59,10 @@ unless (-d $outdir) {
 	make_path( $outdir, { mode => 0755 } )  or die "Can't create $outdir: $!\n";
 }
 
+my $stime = `date`; chomp $stime;
+
 my $logfile = 'klr_metrics.log';
 open LOG, ">", "$outdir/$logfile" or die "Can't create $outdir/$logfile: $!\n";
-
-## Log file
-my $stime = `date`; chomp $stime;
 print LOG "COMMAND: $name @commands\n";
 print LOG "Started on $stime\n";
 
@@ -96,13 +95,19 @@ while (my $fastq = shift@fastq){
 			open OUT, ">", "$filename" or die "Can't create $filename: $!\n";
 		}
 
+		## making sure that $minimum_len is at least 1 to prevent div by 0
 		my $minimum_len;
 		if ($min){ $minimum_len = $min; }
 		else {
 			$minimum_len = 1;
 		}
 
-		my @lengths; my @subset; my %reads; my $count = 0; my $read;
+		my @lengths;
+		my @subset;
+		my %reads;
+		my $count = 0;
+		my $read;
+
 		while (my $line = <FASTQ1>){
 			chomp $line;
 
@@ -145,9 +150,9 @@ while (my $fastq = shift@fastq){
 
 		if ($fastq =~ /.gz$/){ binmode FASTQ1, ":gzip(none)"; }	
 
-		n50($fastq, 'full', @lengths); ## Full
+		metrics($fastq, 'full', @lengths); ## Full
 		if ($min){
-			n50($filename, $min, @subset); ## subset
+			metrics($filename, $min, @subset); ## subset
 		}
 		unless ($metrics){
 			close OUT;
@@ -232,8 +237,8 @@ while (my $fastq = shift@fastq){
 
 		if ($fastq =~ /.gz$/){ binmode FASTQ2, ":gzip(none)"; }
 
-		n50($fastq, 'full', @lengths); ## Full
-		n50($filename, $depth, @subset); ## Subset
+		metrics($fastq, 'full', @lengths); ## Full
+		metrics($filename, $depth, @subset); ## Subset
 		close OUT;
 	}
 
@@ -295,14 +300,13 @@ unless ($metrics){
 ################################################################################
 ## subroutines
 
-sub n50{
+sub metrics{
 
 	my @fh = (*LOG, *STDOUT);
 	my $file = shift @_;
 	my $basename_ext = shift @_;
 	my $num_reads = scalar @_;
-	my @len = sort @_; ## sort by size
-	@len = reverse @len; ## from largest to smallest
+	my @len = reverse (sort @_); ## sort by size; from largest to smallest
 
 	unless ($basename_ext eq 'full'){
 		if ($min){
@@ -370,11 +374,10 @@ sub n50{
 	my $n50; my $n75, my $n90;
 	my $nsum50 = 0; my $nsum75 = 0; my $nsum90 = 0;
 
-	foreach (@len){ $nsum50 += $_; if ($nsum50 >= $n50_td){ $n50 = $_; last; }}
-	foreach (@len){ $nsum75 += $_; if ($nsum75 >= $n75_td){ $n75 = $_; last; }}
-	foreach (@len){ $nsum90 += $_; if ($nsum90 >= $n75_td){ $n90 = $_; last; }}
+	foreach (@len){ $nsum50 += $_; if ($nsum50 >= $n50_td){ $n50 = $_; last; } }
+	foreach (@len){ $nsum75 += $_; if ($nsum75 >= $n75_td){ $n75 = $_; last; } }
+	foreach (@len){ $nsum90 += $_; if ($nsum90 >= $n75_td){ $n90 = $_; last; } }
 
-	# n50
 	$n50 = sprintf ("%.0f", $n50);
 	$json_data{$basename}{'n50'} = $n50;
 	$n50 = commify($n50);
