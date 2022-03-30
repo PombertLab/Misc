@@ -27,6 +27,7 @@ OPTIONS
 -i (--input)	Input file(s) in FASTQ format
 -x (--metrics)	Calculate metrics only, do not create read subset
 -o (--outdir)	Output directory [Default: ./]
+-l (--log)		Log file name [Default: klr_metrics.log]
 -m (--minimum)	Minimum read length to keep
 -d (--depth)	Desired sequencing depth (requires estimated genome size: -s)
 -s (--size)	Expected genome size
@@ -40,6 +41,7 @@ my @commands = @ARGV;
 my @fastq;
 my $metrics;
 my $outdir = './';
+my $logfile = 'klr_metrics.log';
 my $min;
 my $depth;
 my $genome_size;
@@ -48,6 +50,7 @@ GetOptions(
 	'i|input=s@{1,}' => \@fastq,
 	'x|metrics'	=> \$metrics,
 	'o|outdir=s' => \$outdir,
+	'l|log=s' => \$logfile,
 	'm|minimum=i' => \$min,
 	'd|depth=i' => \$depth,
 	's|size=i' => \$genome_size,
@@ -58,10 +61,7 @@ GetOptions(
 unless (-d $outdir) {
 	make_path( $outdir, { mode => 0755 } )  or die "Can't create $outdir: $!\n";
 }
-
 my $stime = `date`; chomp $stime;
-
-my $logfile = 'klr_metrics.log';
 open LOG, ">", "$outdir/$logfile" or die "Can't create $outdir/$logfile: $!\n";
 print LOG "COMMAND: $name @commands\n";
 print LOG "Started on $stime\n";
