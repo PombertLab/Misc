@@ -1,8 +1,8 @@
 #!/usr/bin/perl
 ## Pombert JF, Illinois Tech - 2020
-my $version = '0.7';
+my $version = '0.7a';
 my $name = 'keep_longest_reads.pl';
-my $updated = '2022-02-11';
+my $updated = '2022-03-30';
 
 use strict;
 use warnings;
@@ -238,8 +238,8 @@ sub n50{
 	$median = sprintf("%.0f", $median); $median = commify($median);
 	foreach (@fh){
 		print $_ "Total number of bases: $fsum\n";
-		print $_ "Largest read = $large nt\n";
-		print $_ "Smallest read = $small nt\n";
+		print $_ "Longest read = $large nt\n";
+		print $_ "Shortest read = $small nt\n";
 		print $_ "Average read size = $average nt\n";
 		print $_ "Median read size = $median nt\n";
 	}
