@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 ## Pombert JF, Illinois Tech - 2020
-my $version = '0.7a';
+my $version = '0.8';
 my $name = 'keep_longest_reads.pl';
 my $updated = '2022-03-30';
 
