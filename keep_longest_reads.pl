@@ -21,13 +21,13 @@ SYNOPSIS	Parses FASTQ file to keep the longest reads by size or desired sequenci
 
 EXAMPLE 1	${name} -i file.fastq -o parsed.10k.fastq -m 10000
 EXAMPLE 2	${name} -i file.fastq -o parsed.100x.fastq -d 100 -s 3000000
-EXAMPLE 3	${name} -i file.fastq -x
+EXAMPLE 3	${name} -i file.fastq -m 10000 -x
 
 OPTIONS
 -i (--input)	Input file(s) in FASTQ format
--x (--metrics)	Calculate metrics only, do not create read subset
 -o (--outdir)	Output directory [Default: ./]
 -l (--log)		Log file name [Default: klr_metrics.log]
+-x (--metrics)	Calculate metrics only, do not create read subset
 -m (--minimum)	Minimum read length to keep
 -d (--depth)	Desired sequencing depth (requires estimated genome size: -s)
 -s (--size)	Expected genome size
@@ -39,18 +39,18 @@ die "\n$usage\n" unless@ARGV;
 
 my @commands = @ARGV;
 my @fastq;
-my $metrics;
 my $outdir = './';
 my $logfile = 'klr_metrics.log';
+my $metrics;
 my $min;
 my $depth;
 my $genome_size;
 my $json;
 GetOptions(
 	'i|input=s@{1,}' => \@fastq,
-	'x|metrics'	=> \$metrics,
 	'o|outdir=s' => \$outdir,
 	'l|log=s' => \$logfile,
+	'x|metrics'	=> \$metrics,
 	'm|minimum=i' => \$min,
 	'd|depth=i' => \$depth,
 	's|size=i' => \$genome_size,
