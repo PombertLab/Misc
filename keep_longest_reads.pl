@@ -77,6 +77,7 @@ while (my $fastq = shift@fastq){
 	open FASTQ1, "<$gzip", "$fastq" or die "Can't open $fastq: $!\n";
 	open FASTQ2, "<$gzip", "$fastq" or die "Can't open $fastq: $!\n";
 
+	## Grabbing basename from files (minus extensions...)
 	$basename = fileparse($fastq);
 	$basename =~ s/\.gz$//;
 	$basename =~ s/\.fastq$//;
@@ -108,6 +109,7 @@ while (my $fastq = shift@fastq){
 		my $count = 0;
 		my $read;
 
+		## Working on FASTQ file
 		while (my $line = <FASTQ1>){
 			chomp $line;
 
@@ -150,6 +152,7 @@ while (my $fastq = shift@fastq){
 
 		if ($fastq =~ /.gz$/){ binmode FASTQ1, ":gzip(none)"; }	
 
+		## Calculating metrics
 		metrics($fastq, 'full', @lengths); ## Full
 		if ($min){
 			metrics($filename, $min, @subset); ## subset
@@ -237,6 +240,7 @@ while (my $fastq = shift@fastq){
 
 		if ($fastq =~ /.gz$/){ binmode FASTQ2, ":gzip(none)"; }
 
+		## Calculating metrics
 		metrics($fastq, 'full', @lengths); ## Full
 		metrics($filename, $depth, @subset); ## Subset
 		close OUT;
