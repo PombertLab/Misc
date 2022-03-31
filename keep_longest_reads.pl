@@ -107,7 +107,7 @@ my $basename;
 
 while (my $fastq = shift@fastq){
 
-	print "\n Working on $fastq...\n";
+	print "\nWorking on $fastq...\n";
 
 	my $gzip = '';
 	if ($fastq =~ /.gz$/){ $gzip = ':gzip'; }
