@@ -190,7 +190,9 @@ while (my $fastq = shift@fastq){
 		## Calculating metrics
 		metrics($fastq, 'full', @lengths); ## Full
 		if ($min){
-			metrics($filename, $min, @subset); ## subset
+			if ($min != 1){ ## min == 1 is the same as the full dataset...
+				metrics($filename, $min, @subset); ## subset
+			}
 		}
 		unless ($metrics){
 			close OUT;
