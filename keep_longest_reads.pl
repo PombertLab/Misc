@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 ## Pombert JF, Illinois Tech - 2020
-my $version = '0.8c';
+my $version = '0.9';
 my $name = 'keep_longest_reads.pl';
 my $updated = '2022-03-31';
 
@@ -443,7 +443,8 @@ sub metrics {
 	$median = commify($median);
 
 	# sum
-	my $sum; foreach (@len){ $sum += $_; }
+	my $sum;
+	foreach (@len){ $sum += $_; }
 	$metrics_data{$basename}{'total'} = $sum;
 	my $fsum = commify($sum);
 
@@ -470,16 +471,41 @@ sub metrics {
 		print $_ "Median read size = $median nt\n";
 	}
 
-	## N50, N75, N90
+	### N50, N75, N90
+	# thresholds to reach for N metrics
 	my $n50_td = $sum*0.5;
 	my $n75_td = $sum*0.75;
 	my $n90_td = $sum*0.9;
-	my $n50; my $n75, my $n90;
-	my $nsum50 = 0; my $nsum75 = 0; my $nsum90 = 0;
+	# sums to calculate
+	my $nsum50 = 0;
+	my $nsum75 = 0;
+	my $nsum90 = 0;
+	# metrics to capture
+	my $n50;
+	my $n75,
+	my $n90;
 
-	foreach (@len){ $nsum50 += $_; if ($nsum50 >= $n50_td){ $n50 = $_; last; } }
-	foreach (@len){ $nsum75 += $_; if ($nsum75 >= $n75_td){ $n75 = $_; last; } }
-	foreach (@len){ $nsum90 += $_; if ($nsum90 >= $n75_td){ $n90 = $_; last; } }
+	foreach (@len){
+		$nsum50 += $_;
+		if ($nsum50 >= $n50_td){
+			$n50 = $_;
+			last;
+		}
+	}
+	foreach (@len){
+		$nsum75 += $_;
+		if ($nsum75 >= $n75_td){
+			$n75 = $_;
+			last
+		}
+	}
+	foreach (@len){
+		$nsum90 += $_;
+		if ($nsum90 >= $n90_td){
+			$n90 = $_;
+			last;
+		}
+	}
 
 	$n50 = sprintf ("%.0f", $n50);
 	$metrics_data{$basename}{'n50'} = $n50;
