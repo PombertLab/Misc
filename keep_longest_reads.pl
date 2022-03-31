@@ -403,10 +403,9 @@ sub metrics {
 
 	my @fh = (*LOG, *STDOUT);
 	my $file = shift @_;
-	my $basename_ext = shift @_;
-	my $num_reads = scalar @_;
-	my @len = reverse (sort @_); ## sort by size; from largest to smallest
 
+	## basename
+	my $basename_ext = shift @_;
 	unless ($basename_ext eq 'full'){
 		if ($min){
 			my $div = ($basename_ext/1000);
@@ -417,6 +416,10 @@ sub metrics {
 		}
 		
 	}
+
+	# number of reads in dataset
+	my $num_reads = scalar @_;
+	my @len = reverse (sort @_); ## sort by size; from largest to smallest
 
 	$metrics_data{$basename}{'nreads'} = $num_reads;
 	my $nreads = commify($num_reads);
