@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 ## Pombert JF, Illinois Tech - 2020
-my $version = '0.8b';
+my $version = '0.8c';
 my $name = 'keep_longest_reads.pl';
 my $updated = '2022-03-31';
 
@@ -106,6 +106,8 @@ my %metrics_data;
 my $basename;
 
 while (my $fastq = shift@fastq){
+
+	print "\n Working on $fastq...\n";
 
 	my $gzip = '';
 	if ($fastq =~ /.gz$/){ $gzip = ':gzip'; }
