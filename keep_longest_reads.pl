@@ -190,10 +190,10 @@ while (my $fastq = shift@fastq){
 		if ($fastq =~ /.gz$/){ binmode FASTQ1, ":gzip(none)"; }	
 
 		## Calculating metrics
-		metrics($fastq, 'full', @lengths); ## Full
+		metrics($fastq, 'full', \@lengths); ## Full
 		if ($min){
 			if ($min != 1){ ## min == 1 is the same as the full dataset...
-				metrics($filename, $min, @subset); ## subset
+				metrics($filename, $min, \@subset); ## subset
 			}
 		}
 		unless ($metrics){
@@ -280,8 +280,8 @@ while (my $fastq = shift@fastq){
 		if ($fastq =~ /.gz$/){ binmode FASTQ2, ":gzip(none)"; }
 
 		## Calculating metrics
-		metrics($fastq, 'full', @lengths); ## Full
-		metrics($filename, $depth, @subset); ## Subset
+		metrics($fastq, 'full', \@lengths); ## Full
+		metrics($filename, $depth, \@subset); ## Subset
 		close OUT;
 	}
 
@@ -402,10 +402,10 @@ sub tsv {
 sub metrics {
 
 	my @fh = (*LOG, *STDOUT);
-	my $file = shift @_;
+	my $file = $_[0];
 
 	## basename
-	my $basename_ext = shift @_;
+	my $basename_ext = $_[1];
 	unless ($basename_ext eq 'full'){
 		if ($min){
 			my $div = ($basename_ext/1000);
@@ -418,8 +418,9 @@ sub metrics {
 	}
 
 	# number of reads in dataset
-	my $num_reads = scalar @_;
-	my @len = reverse (sort @_); ## sort by size; from largest to smallest
+	my @reads = @{$_[2]};
+	my $num_reads = scalar @reads;
+	my @len = reverse (sort @reads); ## sort by size; from largest to smallest
 
 	$metrics_data{$basename}{'nreads'} = $num_reads;
 	my $nreads = commify($num_reads);
