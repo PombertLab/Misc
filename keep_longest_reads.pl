@@ -1,8 +1,8 @@
 #!/usr/bin/perl
 ## Pombert JF, Illinois Tech - 2020
-my $version = '0.8';
+my $version = '0.8b';
 my $name = 'keep_longest_reads.pl';
-my $updated = '2022-03-30';
+my $updated = '2022-03-31';
 
 use strict;
 use warnings;
@@ -11,65 +11,93 @@ use PerlIO::gzip;
 use File::Basename;
 use File::Path qw(make_path);
 
-## Usage definition
+################################################################################
+# Usage definition
+################################################################################
+
 my $usage = <<"USAGE";
 NAME		${name}
 VERSION		${version}
 UPDATED		${updated}
-SYNOPSIS	Parses FASTQ file(s) to keep the longest reads by size or desired sequencing depth.
-		Useful for large Nanopore or PacBio FASTQ datasets.
+SYNOPSIS	KLR (keep longest reads) calculates metrics for FASTQ file(s)
+		and/or parse them to keep to keep the longest reads by size or by 
+		desired sequencing depth (useful for large Nanopore or PacBio datasets).
 
-EXAMPLE 2	${name} -i file.fastq -o ./KLR -d 100 -s 3000000
-EXAMPLE 1	${name} -i *.fastq -o ./KLR -m 10000
-EXAMPLE 3	${name} -i *.fastq -o ./KLR -m 10000 -x -j
+COMMAND LINE EXAMPLES
+Minimum read length:		${name} -i *.fastq -o ./KLR -m 10000
+Desired sequencing depth:	${name} -i file.fastq -o ./KLR -d 100 -s 3000000
+Metrics only:			${name} -i *.fastq -o ./KLR -m 10000 -x -t -j 
 
-OPTIONS
+I/O OPTIONS:
 -i (--input)	Input file(s) in FASTQ format
 -o (--outdir)	Output directory [Default: ./]
 -l (--log)	Log file name [Default: klr_metrics.log]
+-t (--tsv)	Metrics summary in TSV format
+-j (--json)	Create .json file for multiQC
+
+PARSING OPTIONS:
 -x (--metrics)	Calculate metrics only, do not create read subset
 -m (--minimum)	Minimum read length to keep
 -d (--depth)	Desired sequencing depth (requires estimated genome size: -s)
 -s (--size)	Expected genome size
--j (--json)	Create .json file for multiQC
 
-NOTE #1	The -m and -d options are mutually exclusive
-NOTE #2	The -d option should only be used with single FASTQ files or from genomes
-	with very similar expected sizes
+NOTES:
+- The -m and -d options are mutually exclusive
+- The -d option should only be used with single FASTQ files or from genomes with
+  very similar expected sizes
 USAGE
+
 die "\n$usage\n" unless@ARGV;
+
+################################################################################
+# Command line options
+################################################################################
 
 my @commands = @ARGV;
 my @fastq;
 my $outdir = './';
 my $logfile = 'klr_metrics.log';
+my $tsv;
+my $json;
 my $metrics;
 my $min;
 my $depth;
 my $genome_size;
-my $json;
+
 GetOptions(
+	# i/o
 	'i|input=s@{1,}' => \@fastq,
 	'o|outdir=s' => \$outdir,
 	'l|log=s' => \$logfile,
+	't|tsv' => \$tsv,
+	'j|json' => \$json,
+	# parsing
 	'x|metrics'	=> \$metrics,
 	'm|minimum=i' => \$min,
 	'd|depth=i' => \$depth,
-	's|size=i' => \$genome_size,
-	'j|json' => \$json
+	's|size=i' => \$genome_size
 );
 
-## Outdir + logfile
+################################################################################
+# Outdir + logfile
+################################################################################
+
 unless (-d $outdir) {
 	make_path( $outdir, { mode => 0755 } )  or die "Can't create $outdir: $!\n";
 }
-my $stime = `date`; chomp $stime;
+
+my $stime = `date`;
+chomp $stime;
+
 open LOG, ">", "$outdir/$logfile" or die "Can't create $outdir/$logfile: $!\n";
 print LOG "COMMAND: $name @commands\n";
 print LOG "Started on $stime\n";
 
-## working on input file(s)
-my %json_data;
+################################################################################
+# Working on FASTQ file(s)
+################################################################################
+
+my %metrics_data;
 my $basename;
 
 while (my $fastq = shift@fastq){
@@ -253,9 +281,40 @@ while (my $fastq = shift@fastq){
 
 }
 
-############## .json file for MultiQC
+################################################################################
+# TSV metrics table
+################################################################################
+
+if ($tsv){
+	my $tsv_file = $outdir.'/klr_metrics.tsv';
+	open TSV, ">", "$tsv_file" or die "Can't create $tsv_file: $!\n";
+
+	# Header
+	foreach my $key (sort (keys %metrics_data)){
+		print TSV "\t$key";
+	}
+	print TSV "\n";
+
+	# Metrics
+	tsv(\*TSV, 'Number of reads', 'nreads');
+	tsv(\*TSV, 'Total number of bases', 'total');
+	tsv(\*TSV, 'Longest read', 'longest');
+	tsv(\*TSV, 'Shortest read', 'shortest');
+	tsv(\*TSV, 'Average read size', 'average');
+	tsv(\*TSV, 'Median read size', 'median');
+	tsv(\*TSV, 'N50', 'n50');
+	tsv(\*TSV, 'N75', 'n75');
+	tsv(\*TSV, 'N90', 'n90');
+
+}
+
+################################################################################
+# .json metrics file for MultiQC
+################################################################################
+
 if ($json){
-	my $json_file = $outdir.'/klr_mqc.json';
+
+	my $json_file = $outdir.'/klr_metrics_mqc.json';
 	open MQC, ">", "$json_file" or die "Can't create $json_file: $!\n";
 
 	my $header = <<"	HEAD";
@@ -273,18 +332,19 @@ if ($json){
 	print MQC "$header";
 	print MQC "\t\"data\": {\n";
 	my $comma_counter = 0;
-	foreach my $key (sort (keys %json_data) ){
+
+	foreach my $key (sort (keys %metrics_data) ){
 		print MQC "\t\t\"$key\": {\n";
-		print MQC "\t\t\t\"Number of reads\": $json_data{$key}{'nreads'},\n";
-		print MQC "\t\t\t\"Total number of bases\": $json_data{$key}{'total'},\n";
-		print MQC "\t\t\t\"Longest read\": $json_data{$key}{'longest'},\n";
-		print MQC "\t\t\t\"Shortest read\": $json_data{$key}{'shortest'},\n";
-		print MQC "\t\t\t\"Average read size\": $json_data{$key}{'average'},\n";
-		print MQC "\t\t\t\"Median read size\": $json_data{$key}{'median'},\n";
-		print MQC "\t\t\t\"N50\": $json_data{$key}{'n50'},\n";
-		print MQC "\t\t\t\"N75\": $json_data{$key}{'n75'},\n";
-		print MQC "\t\t\t\"N90\": $json_data{$key}{'n90'}\n";
-		unless ($comma_counter == scalar (keys %json_data) - 1){
+		print MQC "\t\t\t\"Number of reads\": $metrics_data{$key}{'nreads'},\n";
+		print MQC "\t\t\t\"Total number of bases\": $metrics_data{$key}{'total'},\n";
+		print MQC "\t\t\t\"Longest read\": $metrics_data{$key}{'longest'},\n";
+		print MQC "\t\t\t\"Shortest read\": $metrics_data{$key}{'shortest'},\n";
+		print MQC "\t\t\t\"Average read size\": $metrics_data{$key}{'average'},\n";
+		print MQC "\t\t\t\"Median read size\": $metrics_data{$key}{'median'},\n";
+		print MQC "\t\t\t\"N50\": $metrics_data{$key}{'n50'},\n";
+		print MQC "\t\t\t\"N75\": $metrics_data{$key}{'n75'},\n";
+		print MQC "\t\t\t\"N90\": $metrics_data{$key}{'n90'}\n";
+		unless ($comma_counter == scalar (keys %metrics_data) - 1){
 			print MQC "\t\t},\n";
 		}
 		else {
@@ -297,16 +357,40 @@ if ($json){
 
 }
 
-############## Final timestamp
-my $etime = `date`; chomp $etime;
+################################################################################
+# Final timestamp
+################################################################################
+
+my $etime = `date`;
+chomp $etime;
+
 unless ($metrics){
 	print LOG "Ended on: $etime\n";
 }
 
 ################################################################################
-## subroutines
+# Subroutine(s)
+################################################################################
 
-sub metrics{
+# Prints desired metric in tab-delimited columns (TSV) to filehandle
+sub tsv {
+
+	my $fh = $_[0];
+	my $column = $_[1];
+	my $metric = $_[2];
+	print $fh "$column";
+	foreach my $key (sort (keys %metrics_data)){
+		my $value = $metrics_data{$key}{$metric};
+		# Comment out the line below if you want a TSV without commas in numbers
+		$value = commify($value);
+		print $fh "\t$value";
+	}
+	print $fh "\n";
+
+}
+
+# Calculates metrics from FASTQ file
+sub metrics {
 
 	my @fh = (*LOG, *STDOUT);
 	my $file = shift @_;
@@ -325,7 +409,7 @@ sub metrics{
 		
 	}
 
-	$json_data{$basename}{'nreads'} = $num_reads;
+	$metrics_data{$basename}{'nreads'} = $num_reads;
 	my $nreads = commify($num_reads);
 	foreach (@fh){
 		print $_ "\n## Metrics for dataset $file\n\n";
@@ -342,27 +426,27 @@ sub metrics{
 		$median = (($len[$med1] + $len[$med2])/2);
 	}
 	$median = sprintf("%.0f", $median);
-	$json_data{$basename}{'median'} = $median;
+	$metrics_data{$basename}{'median'} = $median;
 	$median = commify($median);
 
 	# sum
 	my $sum; foreach (@len){ $sum += $_; }
-	$json_data{$basename}{'total'} = $sum;
+	$metrics_data{$basename}{'total'} = $sum;
 	my $fsum = commify($sum);
 
 	# longest
 	my $large = sprintf("%.0f", $len[0]);
-	$json_data{$basename}{'longest'} = $large;
+	$metrics_data{$basename}{'longest'} = $large;
 	$large = commify($large);
 
 	# shortest
 	my $small = sprintf("%.0f", $len[$#len]);
-	$json_data{$basename}{'shortest'} = $small;
+	$metrics_data{$basename}{'shortest'} = $small;
 	$small = commify($small);
 
 	# average
 	my $average = sprintf("%.0f", ($sum/$num_reads));
-	$json_data{$basename}{'average'} = $average;
+	$metrics_data{$basename}{'average'} = $average;
 	$average = commify($average);
 
 	foreach (@fh){
@@ -385,15 +469,15 @@ sub metrics{
 	foreach (@len){ $nsum90 += $_; if ($nsum90 >= $n75_td){ $n90 = $_; last; } }
 
 	$n50 = sprintf ("%.0f", $n50);
-	$json_data{$basename}{'n50'} = $n50;
+	$metrics_data{$basename}{'n50'} = $n50;
 	$n50 = commify($n50);
 
 	$n75 = sprintf ("%.0f", $n75);
-	$json_data{$basename}{'n75'} = $n75;
+	$metrics_data{$basename}{'n75'} = $n75;
 	$n75 = commify($n75);
 
 	$n90 = sprintf ("%.0f", $n90);
-	$json_data{$basename}{'n90'} = $n90;
+	$metrics_data{$basename}{'n90'} = $n90;
 	$n90 = commify($n90);
 
 	foreach (@fh){
@@ -405,7 +489,8 @@ sub metrics{
 
 }
 
-sub commify { ## From the Perl Cookbook; O'Reilly
+# Adds commas to numbers; from the Perl Cookbook (O'Reilly)
+sub commify {
 	my $text = reverse $_[0];
 	$text =~ s/(\d{3})(?=\d)(?!\d*\.)/$1,/g;
 	return scalar reverse $text;
