@@ -20,8 +20,9 @@ NAME		${name}
 VERSION		${version}
 UPDATED		${updated}
 SYNOPSIS	KLR (keep longest reads) calculates metrics for FASTQ file(s)
-		and/or parse them to keep to keep the longest reads by size or by 
-		desired sequencing depth (useful for large Nanopore or PacBio datasets).
+		and/or parse them to keep to keep the longest reads either by minimum 
+		size or by desired sequencing depth (useful for large Nanopore or PacBio
+		datasets).
 
 COMMAND LINE EXAMPLES
 Minimum read length:		${name} -i *.fastq -o ./KLR -m 10000
