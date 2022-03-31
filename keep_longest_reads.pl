@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 ## Pombert JF, Illinois Tech - 2020
-my $version = '0.9';
+my $version = '0.9a';
 my $name = 'keep_longest_reads.pl';
 my $updated = '2022-03-31';
 
@@ -36,6 +36,7 @@ I/O OPTIONS:
 -t (--tsv)	Metrics summary in TSV format
 -j (--json)	Create .json file for multiQC
 -h (--head)	JSON section name for multiQC [Default: Long read data]
+-q (--qcid)	ID name for multiQC JSON file [Default: KLR]
 
 PARSING OPTIONS:
 -x (--metrics)	Calculate metrics only, do not create read subset
@@ -62,6 +63,7 @@ my $prefix = 'klr_metrics';
 my $tsv;
 my $json;
 my $json_header = 'Long read data';
+my $qcid = 'KLR';
 my $metrics;
 my $min;
 my $depth;
@@ -75,6 +77,7 @@ GetOptions(
 	't|tsv' => \$tsv,
 	'j|json' => \$json,
 	'h|head=s' => \$json_header,
+	'q|qcid=s' => \$qcid,
 	# parsing
 	'x|metrics'	=> \$metrics,
 	'm|minimum=i' => \$min,
@@ -327,12 +330,12 @@ if ($json){
 	open MQC, ">", "$json_file" or die "Can't create $json_file: $!\n";
 
 	my $header = <<"	HEAD";
-	"id": "KLR",
+	"id": "$qcid",
 	"section_name": "$json_header",
 	"description": "Metrics calculated with keep_longest_reads.pl (https://github.com/PombertLab).",
 	"plot_type": "table",
 	"pconfig": {
-		"id": "KLR",
+		"id": "$qcid",
 		"format": "{:,.0f}"
 	},
 	HEAD
