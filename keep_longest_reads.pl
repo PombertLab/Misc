@@ -27,14 +27,15 @@ SYNOPSIS	KLR (keep longest reads) calculates metrics for FASTQ file(s)
 COMMAND LINE EXAMPLES
 Minimum read length:		${name} -i *.fastq -o ./KLR -m 10000
 Desired sequencing depth:	${name} -i file.fastq -o ./KLR -d 100 -s 3000000
-Metrics only:			${name} -i *.fastq -o ./KLR -m 10000 -x -t -j 
+Metrics only:			${name} -i *.fastq -o ./KLR -m 10000 -x -t -j -h 'Long read data'
 
 I/O OPTIONS:
 -i (--input)	Input file(s) in FASTQ format
 -o (--outdir)	Output directory [Default: ./]
--l (--log)	Log file name [Default: klr_metrics.log]
+-p (--prefix)	Desired prefix for log, tsv and json files [Default: klr_metrics]
 -t (--tsv)	Metrics summary in TSV format
 -j (--json)	Create .json file for multiQC
+-h (--head)	JSON section name for multiQC [Default: Long read data]
 
 PARSING OPTIONS:
 -x (--metrics)	Calculate metrics only, do not create read subset
@@ -57,9 +58,10 @@ die "\n$usage\n" unless@ARGV;
 my @commands = @ARGV;
 my @fastq;
 my $outdir = './';
-my $logfile = 'klr_metrics.log';
+my $prefix = 'klr_metrics';
 my $tsv;
 my $json;
+my $json_header = 'Long read data';
 my $metrics;
 my $min;
 my $depth;
@@ -69,9 +71,10 @@ GetOptions(
 	# i/o
 	'i|input=s@{1,}' => \@fastq,
 	'o|outdir=s' => \$outdir,
-	'l|log=s' => \$logfile,
+	'p|prefix=s' => \$prefix,
 	't|tsv' => \$tsv,
 	'j|json' => \$json,
+	'h|head=s' => \$json_header,
 	# parsing
 	'x|metrics'	=> \$metrics,
 	'm|minimum=i' => \$min,
@@ -90,6 +93,7 @@ unless (-d $outdir) {
 my $stime = `date`;
 chomp $stime;
 
+my $logfile = $prefix.'.log';
 open LOG, ">", "$outdir/$logfile" or die "Can't create $outdir/$logfile: $!\n";
 print LOG "COMMAND: $name @commands\n";
 print LOG "Started on $stime\n";
@@ -287,7 +291,7 @@ while (my $fastq = shift@fastq){
 ################################################################################
 
 if ($tsv){
-	my $tsv_file = $outdir.'/klr_metrics.tsv';
+	my $tsv_file = $outdir.'/'.$prefix.'.tsv';
 	open TSV, ">", "$tsv_file" or die "Can't create $tsv_file: $!\n";
 
 	# Header
@@ -315,12 +319,12 @@ if ($tsv){
 
 if ($json){
 
-	my $json_file = $outdir.'/klr_metrics_mqc.json';
+	my $json_file = $outdir.'/'.$prefix.'_mqc.json';
 	open MQC, ">", "$json_file" or die "Can't create $json_file: $!\n";
 
 	my $header = <<"	HEAD";
 	"id": "KLR",
-	"section_name": "Long read data",
+	"section_name": "$json_header",
 	"description": "Metrics calculated with keep_longest_reads.pl (https://github.com/PombertLab).",
 	"plot_type": "table",
 	"pconfig": {
