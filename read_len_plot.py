@@ -1,6 +1,6 @@
 #!/usr/bin/python
 ## Pombert lab, 2022
-version = '0.3'
+version = '0.3a'
 name = 'read_len_plot.py'
 
 import sys
@@ -21,11 +21,13 @@ SYNOPSIS	Plots the read length distribution for a given FASTQ dataset with
 COMMAND		{name} \\
 		  -f reads.fastq \\
 		  -c darkorange \\
+		  -o reads.svg \\
 		  -x 50000
 
 OPTIONS:
 -f (--fastq)	FASTQ file to plot (GZIP files are supported)
 -c (--color)	Color to use; red, green, blue... [Default: green]
+-o (--output)	Save plot to specified output file
 -x (--xmax)	Set max X-axis value [Default: automatic]
 -t (--ticks) Set ticks every X kb [Default: 5]
 """
@@ -42,12 +44,14 @@ if (len(sys.argv) <= 1):
 cmd = argparse.ArgumentParser(usage=usage)
 cmd.add_argument("-f", "--fastq")
 cmd.add_argument("-c", "--color", default='green')
+cmd.add_argument("-o", "--output")
 cmd.add_argument("-x", "--xmax", type=int)
 cmd.add_argument("-t", "--ticks", type=int, default=5)
 args = cmd.parse_args()
 
 rgb = args.color
 fastq = args.fastq
+output = args.output
 xmax = args.xmax
 set_ticks = args.ticks
 
@@ -192,6 +196,9 @@ y_metrics_location = max_bin_value - 1
 
 ##### Plotting bar chart
 
+# Setting default image to widescreen by default
+plt.rcParams["figure.figsize"] = (19.2,10.8)
+
 plt.title(
 	fastq,
 	loc='center',
@@ -213,4 +220,9 @@ plt.xlim(0,num_bins)
 plt.xlabel("Read sizes")
 plt.ylabel("Total bases (in Mb)")
 plt.bar(list(reads_distr.keys()), reads_distr.values(), color=rgb, align='edge')
-plt.show()
+
+# Output either to matplotlib GUI or file
+if output is None:
+	plt.show()
+else:
+	plt.savefig(output)
