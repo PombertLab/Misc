@@ -7,6 +7,8 @@
 
 [keep_longest_reads.pl](https://github.com/PombertLab/Misc/blob/main/keep_longest_reads.pl) calculates metrics for FASTQ file(s) and/or parses them to keep the longest reads either by minimum size or by desired sequencing depth (useful for large Nanopore or PacBio datasets).
 
+[read_len_plot.py](https://github.com/PombertLab/Misc/blob/main/read_len_plot.py) plots the read length distribution for a given FASTQ dataset with matplotlib.
+
 [runTaxonomizedBLAST.pl](https://github.com/PombertLab/Misc/blob/main/runTaxonomizedBLAST.pl) runs taxonomized [BLAST](https://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download) searches, and returns the outfmt 6 format with columns staxids, sscinames, sskingdoms, and sblastnames.
 
 [parseTaxonomizedBLAST.pl](https://github.com/PombertLab/Misc/blob/main/parseTaxonomizedBLAST.pl) parses the content of taxonomized [BLAST](https://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download) searches performed with [runTaxonomizedBLAST.pl](https://github.com/PombertLab/Misc/blob/main/runTaxonomizedBLAST.pl).
