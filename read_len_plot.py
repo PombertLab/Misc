@@ -73,6 +73,8 @@ except:
 else:
 	FH = gzip.open(fastq,'r')
 
+print(f"Working on {fastq}...")
+
 for line in FH:
 	line_counter += 1
 	if (line_counter == 2):
