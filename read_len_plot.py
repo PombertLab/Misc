@@ -21,7 +21,7 @@ SYNOPSIS	Plots the read length distribution for a given FASTQ dataset with
 COMMAND		{name} \\
 		  -f reads.fastq \\
 		  -c darkorange \\
-		  -o reads.svg \\
+		  -o read_distibution.svg \\
 		  -x 50000
 
 OPTIONS:
