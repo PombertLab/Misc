@@ -1,6 +1,6 @@
 #!/usr/bin/python
 ## Pombert lab, 2022
-version = '0.3a'
+version = '0.3b'
 name = 'read_len_plot.py'
 
 import sys
@@ -21,7 +21,7 @@ SYNOPSIS	Plots the read length distribution for a given FASTQ dataset with
 COMMAND		{name} \\
 		  -f reads.fastq \\
 		  -c darkorange \\
-		  -o read_distibution.svg \\
+		  -o read_distribution.svg read_distribution.pdf \\
 		  -x 50000
 
 OPTIONS:
@@ -44,7 +44,7 @@ if (len(sys.argv) <= 1):
 cmd = argparse.ArgumentParser(usage=usage)
 cmd.add_argument("-f", "--fastq")
 cmd.add_argument("-c", "--color", default='green')
-cmd.add_argument("-o", "--output")
+cmd.add_argument("-o", "--output", nargs='*')
 cmd.add_argument("-x", "--xmax", type=int)
 cmd.add_argument("-t", "--ticks", type=int, default=5)
 args = cmd.parse_args()
@@ -225,4 +225,5 @@ plt.bar(list(reads_distr.keys()), reads_distr.values(), color=rgb, align='edge')
 if output is None:
 	plt.show()
 else:
-	plt.savefig(output)
+	for x in output:
+		plt.savefig(x)
