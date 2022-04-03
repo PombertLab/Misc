@@ -1,6 +1,6 @@
 #!/usr/bin/python
 ## Pombert lab, 2022
-version = '0.4b'
+version = '0.4c'
 name = 'read_len_plot.py'
 
 import os
@@ -227,8 +227,10 @@ y_metrics_location = max_bin_value - 1
 # Setting default image to widescreen by default
 plt.rcParams["figure.figsize"] = (width,height)
 
+basename = os.path.basename(fastq)
+
 plt.title(
-	fastq,
+	basename,
 	loc='center',
 	fontsize = 12,
 	y = 1.0,
