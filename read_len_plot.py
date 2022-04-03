@@ -1,6 +1,6 @@
 #!/usr/bin/python
 ## Pombert lab, 2022
-version = '0.4c'
+version = '0.4d'
 name = 'read_len_plot.py'
 
 import os
@@ -92,12 +92,9 @@ FH = None
 
 ## Check if file is gzipped or not
 try:
-	with gzip.open(fastq,'r') as FH:
-		FH.read(1)
+	FH = gzip.open(fastq,'r')
 except:
 	FH = open(fastq,'r')
-else:
-	FH = gzip.open(fastq,'r')
 
 print(f"Working on {fastq}...")
 
