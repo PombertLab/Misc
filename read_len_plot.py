@@ -34,11 +34,12 @@ I/O OPTIONS:
 
 PLOT OPTIONS:
 -c (--color)	Color to use; red, green, blue... [Default: green]
--b (--bar)		Bar type: Read sum or read count [Default: sum]
+-b (--bar)	Bar type: Read sum or read count [Default: sum]
 -h (--height)	Figure height in inches [Default: 19.2]
 -w (--width)	Figure width in inches [Default: 10.8]
 -x (--xmax)	Set max X-axis value [Default: automatic]
 -t (--ticks)	Set ticks every X kb [Default: 5]
+-y (--yscale)	Set yscale: linear or log [Default: linear]
 """
 
 # Print custom message if argv is empty
@@ -60,6 +61,7 @@ cmd.add_argument("-h", "--height", default=10.8)
 cmd.add_argument("-w", "--width", default=19.2)
 cmd.add_argument("-x", "--xmax", type=int)
 cmd.add_argument("-t", "--ticks", type=int, default=5)
+cmd.add_argument("-y", "--yscale", default='linear', choices=['linear', 'log'])
 args = cmd.parse_args()
 
 fastq = args.fastq
@@ -71,6 +73,8 @@ width = args.width
 rgb = args.color
 xmax = args.xmax
 set_ticks = args.ticks
+yscale = args.yscale
+
 
 ################################################################################
 ## Working on output directory
@@ -234,12 +238,12 @@ y_metrics_location = max_bin_value - 1
 plt.rcParams["figure.figsize"] = (width,height)
 
 # Setting bar labels
-xlabel = "Read sizes"
+xlabel = 'Read sizes'
 ylabel = None
 if bar == 'sum':
-	ylabel = "Total bases (in Mb)"
+	ylabel = 'Total bases (in Mb)'
 elif bar == 'count':
-	ylabel = "Total read count"
+	ylabel = 'Total read count'
 
 basename = os.path.basename(fastq)
 
@@ -260,10 +264,11 @@ plt.text(
 	ha='right'
 )
 
-plt.xticks(ticks,labels)
-plt.xlim(0,num_bins)
 plt.xlabel(xlabel)
+plt.xlim(0,num_bins)
+plt.xticks(ticks,labels)
 plt.ylabel(ylabel)
+plt.yscale(yscale)
 plt.bar(list(reads_distr[bar].keys()), reads_distr[bar].values(), color=rgb, align='edge')
 
 # Output either to matplotlib GUI or file
