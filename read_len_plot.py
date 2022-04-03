@@ -1,6 +1,7 @@
 #!/usr/bin/python
 ## Pombert lab, 2022
-version = '0.5'
+version = '0.5a'
+updated = '2022-04-03'
 name = 'read_len_plot.py'
 
 import os
@@ -16,6 +17,7 @@ import matplotlib.pyplot as plt
 usage = f"""
 NAME		{name}
 VERSION		{version}
+UPDATED		{updated}
 SYNOPSIS	Plots the read length distribution for a given FASTQ dataset with 
 		matplotlib
 
@@ -41,6 +43,8 @@ PLOT OPTIONS:
 -x (--xmax)	Set max X-axis value [Default: automatic]
 -t (--ticks)	Set ticks every X kb [Default: 5]
 -y (--yscale)	Set yscale: linear or log [Default: linear]
+--title		Set title; defaults to file basename if not set
+--title_font	Set title font: normal, bold, heavy [Default: normal]
 """
 
 # Print custom message if argv is empty
@@ -63,6 +67,8 @@ cmd.add_argument("-w", "--width", default=19.2)
 cmd.add_argument("-x", "--xmax", type=int)
 cmd.add_argument("-t", "--ticks", type=int, default=5)
 cmd.add_argument("-y", "--yscale", default='linear', choices=['linear', 'log'])
+cmd.add_argument("--title")
+cmd.add_argument("--title_font", default='normal', choices=['normal', 'bold', 'heavy'])
 args = cmd.parse_args()
 
 fastq = args.fastq
@@ -75,6 +81,8 @@ rgb = args.color
 xmax = args.xmax
 set_ticks = args.ticks
 yscale = args.yscale
+title = args.title
+title_font = args.title_font
 
 
 ################################################################################
@@ -246,14 +254,16 @@ if bar == 'sum':
 elif bar == 'count':
 	ylabel = 'Total read count'
 
-basename = os.path.basename(fastq)
+if title is None:
+	title = os.path.basename(fastq)
 
 plt.title(
-	basename,
+	title,
 	loc='center',
 	fontsize = 12,
 	y = 1.0,
-	pad=-50
+	pad=-50,
+	fontweight=title_font
 )
 plt.text(
 	x_metrics_location,
