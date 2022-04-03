@@ -30,6 +30,7 @@ I/O OPTIONS:
 -d (--outdir)	Output directory [Default: ./]
 -o (--output)	Save plot to specified output file(s)
 		## Defaults to matplotlib GUI otherwize
+		## Supported formats: png, pdf, png, ps and svg
 
 PLOT OPTIONS:
 -c (--color)	Color to use; red, green, blue... [Default: green]
