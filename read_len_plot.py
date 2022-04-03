@@ -1,6 +1,6 @@
 #!/usr/bin/python
 ## Pombert lab, 2022
-version = '0.4d'
+version = '0.5'
 name = 'read_len_plot.py'
 
 import os
@@ -34,6 +34,7 @@ I/O OPTIONS:
 
 PLOT OPTIONS:
 -c (--color)	Color to use; red, green, blue... [Default: green]
+-b (--bar)		Bar type: Read sum or read count [Default: sum]
 -h (--height)	Figure height in inches [Default: 19.2]
 -w (--width)	Figure width in inches [Default: 10.8]
 -x (--xmax)	Set max X-axis value [Default: automatic]
@@ -54,6 +55,7 @@ cmd.add_argument("-f", "--fastq")
 cmd.add_argument("-o", "--output", nargs='*')
 cmd.add_argument("-d", "--outdir", default='./')
 cmd.add_argument("-c", "--color", default='green')
+cmd.add_argument("-b", "--bar", default='sum', choices=['sum', 'count'])
 cmd.add_argument("-h", "--height", default=10.8)
 cmd.add_argument("-w", "--width", default=19.2)
 cmd.add_argument("-x", "--xmax", type=int)
@@ -63,6 +65,7 @@ args = cmd.parse_args()
 fastq = args.fastq
 output = args.output
 outdir = args.outdir
+bar = args.bar
 height = args.height
 width = args.width
 rgb = args.color
@@ -173,9 +176,12 @@ metrics = metrics.replace("\t","")
 
 ##### Bins, ticks and text box location
 
-# Dictionary to store read size distributions + bin size
-reads_distr = {}
+# Bin size + dictionary to store read size distributions
 binsize = 1000
+reads_distr = {
+	'sum': {},
+	'count': {}
+}
 
 # Checking for max value, either from data or the command line
 max_val = None
@@ -192,17 +198,20 @@ key_labels = []
 for x in range(0,num_bins):
 	label = f"{x}k"
 	key_labels.append(label)
-	reads_distr[label] = 0
+	reads_distr['sum'][label] = 0
+	reads_distr['count'][label] = 0
 
-# Calculating sum of all bases per bin (in Mb)
+# Calculating sum of all bases (in Mb) + read count per bin
 for size in read_sizes:
 	bin_loc = int(size/binsize)
 	bin_loc = f"{bin_loc}k"
 	read_mb = size/1000000
-	if bin_loc in reads_distr.keys():
-		reads_distr[bin_loc] += read_mb
+	if bin_loc in reads_distr[bar].keys():
+		reads_distr['sum'][bin_loc] += read_mb
+		reads_distr['count'][bin_loc] += 1
 	else:
-		reads_distr[bin_loc] = read_mb
+		reads_distr['sum'][bin_loc] = read_mb
+		reads_distr['count'][bin_loc] = 1
 
 # Setting ticks for plot
 ticks = []
@@ -214,15 +223,23 @@ for i in range(0, num_bins, set_ticks):
 # Metrics text box location (top right corner)
 x_metrics_location = ticks[-1] - 1
 max_bin_value = 0
-for key in reads_distr.keys():
-	if reads_distr[key] > max_bin_value:
-		max_bin_value = reads_distr[key]
+for key in reads_distr[bar].keys():
+	if reads_distr[bar][key] > max_bin_value:
+		max_bin_value = reads_distr[bar][key]
 y_metrics_location = max_bin_value - 1
 
 ##### Plotting bar chart
 
 # Setting default image to widescreen by default
 plt.rcParams["figure.figsize"] = (width,height)
+
+# Setting bar labels
+xlabel = "Read sizes"
+ylabel = None
+if bar == 'sum':
+	ylabel = "Total bases (in Mb)"
+elif bar == 'count':
+	ylabel = "Total read count"
 
 basename = os.path.basename(fastq)
 
@@ -242,11 +259,12 @@ plt.text(
 	va='top',
 	ha='right'
 )
+
 plt.xticks(ticks,labels)
 plt.xlim(0,num_bins)
-plt.xlabel("Read sizes")
-plt.ylabel("Total bases (in Mb)")
-plt.bar(list(reads_distr.keys()), reads_distr.values(), color=rgb, align='edge')
+plt.xlabel(xlabel)
+plt.ylabel(ylabel)
+plt.bar(list(reads_distr[bar].keys()), reads_distr[bar].values(), color=rgb, align='edge')
 
 # Output either to matplotlib GUI or file
 if output is None:
