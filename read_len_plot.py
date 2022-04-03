@@ -1,6 +1,6 @@
 #!/usr/bin/python
 ## Pombert lab, 2022
-version = '0.4'
+version = '0.4b'
 name = 'read_len_plot.py'
 
 import os
