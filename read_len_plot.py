@@ -34,7 +34,7 @@ I/O OPTIONS:
 
 PLOT OPTIONS:
 -c (--color)	Color to use; red, green, blue... [Default: green]
--g (--height)	Figure height in inches [Default: 19.2]
+-h (--height)	Figure height in inches [Default: 19.2]
 -w (--width)	Figure width in inches [Default: 10.8]
 -x (--xmax)	Set max X-axis value [Default: automatic]
 -t (--ticks)	Set ticks every X kb [Default: 5]
@@ -49,12 +49,12 @@ if (len(sys.argv) <= 1):
 ## Create command lines switches
 ################################################################################
 
-cmd = argparse.ArgumentParser(usage=usage)
+cmd = argparse.ArgumentParser(add_help=False)
 cmd.add_argument("-f", "--fastq")
 cmd.add_argument("-o", "--output", nargs='*')
 cmd.add_argument("-d", "--outdir", default='./')
 cmd.add_argument("-c", "--color", default='green')
-cmd.add_argument("-g", "--height", default=10.8)
+cmd.add_argument("-h", "--height", default=10.8)
 cmd.add_argument("-w", "--width", default=19.2)
 cmd.add_argument("-x", "--xmax", type=int)
 cmd.add_argument("-t", "--ticks", type=int, default=5)
