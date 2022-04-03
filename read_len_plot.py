@@ -34,6 +34,7 @@ I/O OPTIONS:
 
 PLOT OPTIONS:
 -c (--color)	Color to use; red, green, blue... [Default: green]
+		# https://matplotlib.org/stable/gallery/color/named_colors.html
 -b (--bar)	Bar type: Read sum or read count [Default: sum]
 -h (--height)	Figure height in inches [Default: 19.2]
 -w (--width)	Figure width in inches [Default: 10.8]
