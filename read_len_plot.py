@@ -1,7 +1,7 @@
 #!/usr/bin/python
 ## Pombert lab, 2022
-version = '0.5a'
-updated = '2022-04-03'
+version = '0.5b'
+updated = '2022-04-09'
 name = 'read_len_plot.py'
 
 import os
@@ -9,6 +9,7 @@ import sys
 import gzip
 import argparse
 import matplotlib.pyplot as plt
+import re
 
 ################################################################################
 ## README
@@ -30,6 +31,7 @@ COMMAND		{name} \\
 I/O OPTIONS:
 -f (--fastq)	FASTQ file to plot (GZIP files are supported)
 -d (--outdir)	Output directory [Default: ./]
+-m (--metrics)	Metrics output file [Default: read_metrics.txt]
 -o (--output)	Save plot to specified output file(s)
 		## Defaults to matplotlib GUI otherwize
 		## Supported formats: png, pdf, png, ps and svg
@@ -60,6 +62,7 @@ cmd = argparse.ArgumentParser(add_help=False)
 cmd.add_argument("-f", "--fastq")
 cmd.add_argument("-o", "--output", nargs='*')
 cmd.add_argument("-d", "--outdir", default='./')
+cmd.add_argument("-m", "--metrics", default='read_metrics.txt')
 cmd.add_argument("-c", "--color", default='green')
 cmd.add_argument("-b", "--bar", default='sum', choices=['sum', 'count'])
 cmd.add_argument("-h", "--height", default=10.8)
@@ -74,6 +77,7 @@ args = cmd.parse_args()
 fastq = args.fastq
 output = args.output
 outdir = args.outdir
+metrics_file = args.metrics
 bar = args.bar
 height = args.height
 width = args.width
@@ -112,7 +116,7 @@ try:
 except:
 	FH = open(fastq,'r')
 
-print(f"Working on {fastq}...")
+print(f"\nWorking on {fastq}...\n")
 
 for line in FH:
 	line_counter += 1
@@ -160,6 +164,27 @@ read_sizes.sort(reverse=True)
 n50 = n_metric(read_sizes,0.5)
 n75 = n_metric(read_sizes,0.75)
 n90 = n_metric(read_sizes,0.9)
+
+# Print metrics to file or STDOUT
+pmetrics = f"""Metrics for {fastq}:
+
+Total bases:\t{read_sum}
+# reads:\t{read_num}
+Longest:\t{longest_read}
+Shortest:\t{shortest_read}
+Average:\t{average}
+Median:\t\t{median}
+N50:\t\t{n50}
+N75:\t\t{n75}
+N90:\t\t{n90}
+"""
+
+if output is None:
+	print(pmetrics)
+else:
+	metrics_output = outdir + '/' + metrics_file
+	METRICS = open(metrics_output,'w')
+	print(pmetrics, file=METRICS)
 
 
 ################################################################################
