@@ -1,7 +1,7 @@
 #!/usr/bin/python
 ## Pombert lab, 2022
-version = '0.5b'
-updated = '2022-04-09'
+version = '0.5c'
+updated = '2022-06-24'
 name = 'read_len_plot.py'
 
 import os
@@ -114,6 +114,8 @@ FH = None
 try:
 	FH = gzip.open(fastq,'r')
 except:
+	FH = open(fastq,'r')
+else:
 	FH = open(fastq,'r')
 
 print(f"\nWorking on {fastq}...\n")
