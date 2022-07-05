@@ -1,7 +1,7 @@
 #!/usr/bin/python
 ## Pombert lab, 2022
-version = '0.5c'
-updated = '2022-06-24'
+version = '0.5d'
+updated = '2022-07-05'
 name = 'read_len_plot.py'
 
 import os
@@ -297,7 +297,7 @@ plt.text(
 	y_metrics_location,
 	metrics,
 	fontsize=10,
-	font='monospace',
+	family='monospace',
 	va='top',
 	ha='right'
 )
