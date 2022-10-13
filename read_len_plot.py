@@ -116,7 +116,7 @@ try:
 except:
 	FH = open(fastq,'r')
 else:
-	FH = open(fastq,'r')
+	FH = gzip.open(fastq,'r')
 
 print(f"\nWorking on {fastq}...\n")
 
