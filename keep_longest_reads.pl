@@ -1,8 +1,8 @@
 #!/usr/bin/perl
 ## Pombert JF, Illinois Tech - 2020
-my $version = '0.9a';
+my $version = '0.9b';
 my $name = 'keep_longest_reads.pl';
-my $updated = '2022-03-31';
+my $updated = '2022-10-21';
 
 use strict;
 use warnings;
@@ -163,8 +163,7 @@ while (my $fastq = shift@fastq){
 			## Read sequence
 			elsif ($count == 1){ 
 				$reads{$read}[1] = $line;
-				## Adding leading zeroes to help sort array
-				my $len = sprintf("%09d", length($line));
+				my $len = length($line);
 				push (@lengths, $len);
 				$count++;
 			}
@@ -176,7 +175,7 @@ while (my $fastq = shift@fastq){
 			elsif ($count == 3){
 				$reads{$read}[2] = $line;
 				if (length($reads{$read}[1]) >= $minimum_len){
-					my $keep = sprintf("%09d", length($reads{$read}[1]));
+					my $keep = length($reads{$read}[1]);
 					push (@subset, $keep);
 					unless ($metrics){
 						print OUT "$reads{$read}[0]\n";
@@ -221,8 +220,7 @@ while (my $fastq = shift@fastq){
 			chomp $line;
 			if ($count == 0){ $count++; }
 			elsif ($count == 1){
-				## Adding leading zeroes to help sort array
-				my $len = sprintf("%09d", length($line));
+				my $len = length($line);
 				push (@lengths, $len);
 				$count++;
 			}
@@ -232,19 +230,23 @@ while (my $fastq = shift@fastq){
 
 		if ($fastq =~ /.gz$/){ binmode FASTQ1, ":gzip(none)"; }	
 
-		@lengths = sort @lengths; ## sort by size
-		@lengths = reverse @lengths; ## from largest to smallest
-		my $len_threshold; my $sum;
+		@lengths = sort {$b <=> $a} @lengths; ## sort by size, from largest to smallest
+		my $len_threshold;
+		my $sum;
 		foreach (@lengths){
 			if ($sum <= ($depth*$genome_size)){ $len_threshold = $_; }
 			$sum += $_;
 		}
-		$len_threshold = sprintf("%0d", $len_threshold);
+		$len_threshold = $len_threshold;
 		print "\nMinimum read size for ${depth}X sequencing depth at estimated genome size of $genome_size bp = $len_threshold bp\n";
 		print "Saving reads of at least $len_threshold bp to $filename\n\n";
 
 		## Pass 2 - Parsing reads
-		$count = 0; my $read; my %reads; my @subset;
+		$count = 0;
+		my $read;
+		my %reads;
+		my @subset;
+
 		while (my $line = <FASTQ2>){
 			chomp $line;
 
@@ -268,7 +270,7 @@ while (my $fastq = shift@fastq){
 			elsif ($count == 3){
 				$reads{$read}[2] = $line; 
 				if (length($reads{$read}[1]) >= $len_threshold){
-					my $keep = sprintf("%09d", length($reads{$read}[1]));
+					my $keep = length($reads{$read}[1]);
 					push (@subset, $keep);
 					print OUT "$reads{$read}[0]\n";
 					print OUT "$reads{$read}[1]\n";
@@ -276,7 +278,8 @@ while (my $fastq = shift@fastq){
 					print OUT "$reads{$read}[2]\n";
 				}
 				## Clearing read db to minimize memory usage
-				$count = 0; %reads = ();
+				$count = 0;
+				%reads = ();
 			}
 		}
 
@@ -423,7 +426,7 @@ sub metrics {
 	# number of reads in dataset
 	my @reads = @{$_[2]};
 	my $num_reads = scalar @reads;
-	my @len = reverse (sort @reads); ## sort by size; from largest to smallest
+	my @len = sort {$b <=> $a} (@reads); ## sort by size; from largest to smallest
 
 	$metrics_data{$basename}{'nreads'} = $num_reads;
 	my $nreads = commify($num_reads);
