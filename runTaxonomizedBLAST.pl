@@ -1,12 +1,14 @@
 #!/usr/bin/perl
 ## Pombert Lab, IIT 2019
 my $name = 'runTaxonomizedBLAST.pl';
-my $version = '0.3';
-my $updated = '2022-02-15';
+my $version = '0.4';
+my $updated = '2022-11-22';
 
 use strict;
 use warnings;
 use Getopt::Long qw(GetOptions);
+use File::Basename;
+use File::Path qw(make_path);
 
 my $usage = <<"OPTIONS";
 NAME		${name}
@@ -29,19 +31,21 @@ USAGE		${name} \\
 		  -d nr \\
 		  -q *.fasta \\
 		  -e 1e-10 \\
-		  -c 1
+		  -c 1 \\
+		  -o RESULTS
 
 OPTIONS:
--p (--program)	## BLAST type: blastn, blastp, blastx, tblastn or tblastx [Default = blastn]
--a (--algo)	## Blastn algorithm: blastn, dc-megablast, or megablast [Default = megablast] 
--t (--threads)	## Number of threads [Default = 16]
--q (--query)	## FASTA file(s) to query
--d (--db)	## Database to query: nt, nr, or other [Default = nt]
--e (--evalue)	## Evalue cutoff [Default = 1e-05]
--c (--culling)	## Culling limit [Default = 1]
--g (--gilist)	## Restrict search to GI list
--x (--taxids)	## Restrict search to taxids from file ## one taxid per line
--n (--ntaxids)	## Exclude from search taxids from file ## one taxid per line
+-p (--program)	BLAST type: blastn, blastp, blastx, tblastn or tblastx [Default: blastn]
+-a (--algo)	Blastn algorithm: blastn, dc-megablast, or megablast [Default: megablast] 
+-t (--threads)	Number of threads [Default: 16]
+-q (--query)	FASTA file(s) to query
+-d (--db)	Database to query: nt, nr, or other [Default: nt]
+-e (--evalue)	Evalue cutoff [Default: 1e-05]
+-c (--culling)	Culling limit [Default: 1]
+-g (--gilist)	Restrict search to GI list
+-x (--taxids)	Restrict search to taxids from file ## one taxid per line
+-n (--ntaxids)	Exclude from search taxids from file ## one taxid per line
+-o (--outdir)	Output directory [Default: ./]
 OPTIONS
 die "\n$usage\n" unless @ARGV;
 
@@ -56,6 +60,7 @@ my $culling = 1;
 my $gi;
 my $taxids;
 my $ntaxids;
+my $outdir = './';
 
 GetOptions(
     'p|program=s' => \$blast_type,
@@ -67,8 +72,15 @@ GetOptions(
 	'c|culling=i' => \$culling,
 	'q|query=s@{1,}' => \@query,
 	'x|taxids=s' => \$taxids,
-	'n|ntaxids=s' => \$ntaxids
+	'n|ntaxids=s' => \$ntaxids,
+	'o|outdir=s' => \$outdir
 );
+
+## Checking output directory
+unless (-d $outdir){
+	make_path ($outdir,{mode => 0755}) or die "Can't create $outdir: $!\n";
+}
+
 
 ## Checking for taxonomic restrictions, if any
 ## Useful to query a subset of the NCBI databases
@@ -89,6 +101,13 @@ my $algo = '';
 if ($blast_type eq 'blastn'){ $algo = "-task $task"; }
 
 for my $query (@query){
+
+	my $filename = fileparse($query);
+	my ($basename,$extension) = $filename =~ /^(.*)\.(\w+)$/;
+	my $outfile = $outdir.'/'.$basename.'.'.$blast_type.'.6';
+
+	print "Running $blast_type on $query against $db using $threads threads. This might take a while...\n";
+
 	system "$blast_type \\
 	  -num_threads $threads \\
 	  $algo \\
@@ -99,5 +118,5 @@ for my $query (@query){
 	  -evalue $evalue \\
 	  -culling_limit $culling \\
 	  -outfmt '6 qseqid sseqid qstart qend pident length bitscore evalue staxids sscinames sskingdoms sblastnames' \\
-	  -out $query.$blast_type.6";
+	  -out $outfile";
 }
