@@ -147,23 +147,25 @@ if verbose and zipflag == False:
 			b = reader(1024 * 1024)
 
 	with open(fastq, 'rb') as f:
-		c_generator = _line_counter(f.raw.read)
-		count = sum(buffer.count(b'\n') for buffer in c_generator)
-		num_lines = count
+		line_count = _line_counter(f.raw.read)
+		num_lines = sum(buffer.count(b'\n') for buffer in line_count)
 		num_reads = int(num_lines / 4)
 		print(f"Total number of reads: {num_reads:,}")
 
 ## Parse reads
 for line in FH:
+
 	line_counter += 1
+
 	if (line_counter == 2):
 		line = line.strip()
 		read_size = len(line)
 		read_sizes.append(read_size)
+
 	elif (line_counter == 4):
 		line_counter = 0
 		read_num += 1
-		
+
 		if verbose:
 			if (read_num % 25000 == 0):
 				progress = (read_num / num_reads) * 100
