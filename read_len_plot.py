@@ -1,15 +1,15 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 ## Pombert lab, 2022
-version = '0.5d'
-updated = '2022-07-05'
+version = '0.5e'
+updated = '2024-02-08'
 name = 'read_len_plot.py'
 
 import os
 import sys
 import gzip
+import pragzip
 import argparse
 import matplotlib.pyplot as plt
-import re
 
 ################################################################################
 ## README
@@ -22,6 +22,8 @@ UPDATED		{updated}
 SYNOPSIS	Plots the read length distribution for a given FASTQ dataset with 
 		matplotlib
 
+REQS		pragzip - https://pypi.org/project/pragzip/ ## pip install pragzip
+
 COMMAND		{name} \\
 		  -f reads.fastq \\
 		  -c darkorange \\
@@ -32,6 +34,7 @@ I/O OPTIONS:
 -f (--fastq)	FASTQ file to plot (GZIP files are supported)
 -d (--outdir)	Output directory [Default: ./]
 -m (--metrics)	Metrics output file [Default: read_metrics.txt]
+-v (--verbose)	Print progress (every 25,000 reads)
 -o (--output)	Save plot to specified output file(s)
 		## Defaults to matplotlib GUI otherwize
 		## Supported formats: png, pdf, png, ps and svg
@@ -63,6 +66,7 @@ cmd.add_argument("-f", "--fastq")
 cmd.add_argument("-o", "--output", nargs='*')
 cmd.add_argument("-d", "--outdir", default='./')
 cmd.add_argument("-m", "--metrics", default='read_metrics.txt')
+cmd.add_argument("-v", "--verbose", action='store_true')
 cmd.add_argument("-c", "--color", default='green')
 cmd.add_argument("-b", "--bar", default='sum', choices=['sum', 'count'])
 cmd.add_argument("-h", "--height", default=10.8)
@@ -78,6 +82,7 @@ fastq = args.fastq
 output = args.output
 outdir = args.outdir
 metrics_file = args.metrics
+verbose = args.verbose
 bar = args.bar
 height = args.height
 width = args.width
@@ -87,7 +92,6 @@ set_ticks = args.ticks
 yscale = args.yscale
 title = args.title
 title_font = args.title_font
-
 
 ################################################################################
 ## Working on output directory
@@ -106,20 +110,50 @@ if output is not None:
 ################################################################################
 
 read_sizes = []
+num_lines = 0
 line_counter = 0
+read_num = 0
 
+## Check gzip status
+def check_gzip(file):
+    with open(file, 'rb') as test:
+        return test.read(2) == b'\x1f\x8b'
+
+zipflag = check_gzip(fastq)
 FH = None
 
-## Check if file is gzipped or not
-try:
+if (zipflag == True):
 	FH = gzip.open(fastq,'r')
-except:
-	FH = open(fastq,'r')
 else:
-	FH = gzip.open(fastq,'r')
+	FH = open(fastq,'r')
 
 print(f"\nWorking on {fastq}...\n")
 
+## Count lines/reads
+if verbose and zipflag == True:
+	with pragzip.open(fastq) as file:
+		while chunk := file.read( 1024*1024 ):
+			num_lines += chunk.count(b'\n')
+
+	num_reads = int(num_lines / 4)
+	print(f"Total number of reads: {num_reads:,}")
+
+if verbose and zipflag == False:
+
+	def _line_counter(reader):
+		b = reader(1024 * 1024)
+		while b:
+			yield b
+			b = reader(1024 * 1024)
+
+	with open(fastq, 'rb') as f:
+		c_generator = _line_counter(f.raw.read)
+		count = sum(buffer.count(b'\n') for buffer in c_generator)
+		num_lines = count
+		num_reads = int(num_lines / 4)
+		print(f"Total number of reads: {num_reads:,}")
+
+## Parse reads
 for line in FH:
 	line_counter += 1
 	if (line_counter == 2):
@@ -128,6 +162,12 @@ for line in FH:
 		read_sizes.append(read_size)
 	elif (line_counter == 4):
 		line_counter = 0
+		read_num += 1
+		
+		if verbose:
+			if (read_num % 25000 == 0):
+				progress = (read_num / num_reads) * 100
+				print(f"  Read # {read_num:,} : {progress:,.2f} % completed...")
 
 ################################################################################
 ## Calculate read metrics
