@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 ## Pombert lab, 2022
-version = '0.5e'
-updated = '2024-02-08'
+version = '0.5f'
+updated = '2024-02-09'
 name = 'read_len_plot.py'
 
 import os
@@ -10,6 +10,7 @@ import gzip
 import pragzip
 import argparse
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 ################################################################################
 ## README
@@ -22,7 +23,9 @@ UPDATED		{updated}
 SYNOPSIS	Plots the read length distribution for a given FASTQ dataset with 
 		matplotlib
 
-REQS		pragzip - https://pypi.org/project/pragzip/ ## pip install pragzip
+REQS		pragzip - https://pypi.org/project/pragzip/ 
+		tqdm - https://pypi.org/project/tqdm/
+		## pip install pragzip tqdm
 
 COMMAND		{name} \\
 		  -f reads.fastq \\
@@ -152,6 +155,8 @@ if verbose and zipflag == False:
 		num_reads = int(num_lines / 4)
 		print(f"Total number of reads: {num_reads:,}")
 
+pbar = tqdm(desc='Progress', total = num_reads)
+
 ## Parse reads
 for line in FH:
 
@@ -165,11 +170,10 @@ for line in FH:
 	elif (line_counter == 4):
 		line_counter = 0
 		read_num += 1
-
 		if verbose:
-			if (read_num % 25000 == 0):
-				progress = (read_num / num_reads) * 100
-				print(f"  Read # {read_num:,} : {progress:,.2f} % completed...")
+			pbar.update()
+
+pbar.close()
 
 ################################################################################
 ## Calculate read metrics
@@ -357,5 +361,5 @@ if output is None:
 else:
 	for x in output:
 		filename = outdir + '/' + x
-		print(f"  Creating {filename}...")
+		print(f"Creating {filename}...\n")
 		plt.savefig(filename)
