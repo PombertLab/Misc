@@ -360,6 +360,7 @@ if output is None:
 	plt.show()
 else:
 	for x in output:
-		filename = outdir + '/' + x
-		print(f"Creating {filename}...\n")
+		filename = outdir + '/' + x 
+		print(f"Creating {filename}...")
 		plt.savefig(filename)
+	print("")
