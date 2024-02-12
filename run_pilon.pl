@@ -1,8 +1,8 @@
 #!/usr/bin/perl
 ## Pombert JF, Illinois Tech - 2019
-my $version = '0.6';
+my $version = '0.6a';
 my $name = 'run_pilon.pl';
-my $updated = '2021-04-07';
+my $updated = '2024-02-12';
 
 use strict; use warnings; use Getopt::Long qw(GetOptions); use File::Basename;
 
@@ -33,6 +33,7 @@ OPTIONS:
 -t (--threads)	Number of threads [Default: 16]
 -g (--Gb)	Amount of RAM (in Gb) to allocate to pilon jar file [Default: 16]
 -o (--outdir)	Output directory [Default: ./]
+-d (--diploid)	Turn on Pilon's --diploid flag
 USAGE
 die "\n$usage\n" unless @ARGV;
 my @commands = @ARGV;
@@ -45,6 +46,7 @@ my $pilon = '/opt/pilon-1.24/pilon-1.24.jar';
 my $threads = 16;
 my $ram = 16;
 my $outdir = './';
+my $diploid;
 GetOptions(
 	'f|fasta=s' => \$fasta,
 	'pe1=s' => \$pe1,
@@ -53,7 +55,8 @@ GetOptions(
 	'p|pilon=s' => \$pilon,
 	't|threads=i' => \$threads,
 	'g|Gb=i' => \$ram,
-	'o|outdir=s' => \$outdir
+	'o|outdir=s' => \$outdir,
+	'd|diploid' => \$diploid
 );
 
 ## Checking output directory and log file
@@ -83,10 +86,16 @@ system "samtools sort -@ $threads -o $bam_sorted  $bam_unsorted";
 system "rm $bam_unsorted $sam_file"; ## Discarding unsorted BAM/SAM files
 system "samtools index $bam_sorted ";
 
+my $diploid_flag = '';
+if ($diploid){
+	$diploid_flag = '--diploid';
+}
+
 # Pilon round no. 1
 system "java \\
   -Xmx${ram}G \\
   -jar $pilon \\
+  $diploid_flag \\
   --genome $fasta \\
   --frags $bam_sorted \\
   --output round1 \\
@@ -128,6 +137,7 @@ if ($rounds >= 2){
 		system "java \\
 		  -Xmx${ram}G \\
 		  -jar $pilon \\
+		  $diploid_flag \\
 		  --genome ${outdir}/round${prev}/round${prev}.fasta \\
 		  --frags $bam_sorted \\
 		  --output round${num} \\
