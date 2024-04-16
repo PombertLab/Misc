@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 ## Pombert lab, 2022
-version = '0.5f'
-updated = '2024-02-09'
+version = '0.5g'
+updated = '2024-04-16'
 name = 'read_len_plot.py'
 
 import os
@@ -132,8 +132,10 @@ else:
 
 print(f"\nWorking on {fastq}...\n")
 
+num_reads = None
+
 ## Count lines/reads
-if verbose and zipflag == True:
+if zipflag == True:
 	with pragzip.open(fastq) as file:
 		while chunk := file.read( 1024*1024 ):
 			num_lines += chunk.count(b'\n')
@@ -141,7 +143,7 @@ if verbose and zipflag == True:
 	num_reads = int(num_lines / 4)
 	print(f"Total number of reads: {num_reads:,}")
 
-if verbose and zipflag == False:
+if zipflag == False:
 
 	def _line_counter(reader):
 		b = reader(1024 * 1024)
@@ -155,7 +157,8 @@ if verbose and zipflag == False:
 		num_reads = int(num_lines / 4)
 		print(f"Total number of reads: {num_reads:,}")
 
-pbar = tqdm(desc='Progress', total = num_reads)
+if verbose:
+	pbar = tqdm(desc='Progress', total = num_reads)
 
 ## Parse reads
 for line in FH:
@@ -173,7 +176,8 @@ for line in FH:
 		if verbose:
 			pbar.update()
 
-pbar.close()
+if verbose:
+	pbar.close()
 
 ################################################################################
 ## Calculate read metrics
