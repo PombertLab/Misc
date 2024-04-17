@@ -40,7 +40,7 @@ I/O OPTIONS:
 -v (--verbose)	Print progress (every 25,000 reads)
 -o (--output)	Save plot to specified output file(s)
 		## Defaults to matplotlib GUI otherwize
-		## Supported formats: png, pdf, png, ps and svg
+		## Supported formats: png, pdf, ps and svg
 
 PLOT OPTIONS:
 -c (--color)	Color to use; red, green, blue... [Default: green]
