@@ -1,41 +1,56 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 ## Pombert JF, Illinois Tech - 2019
+
 my $version = '0.6a';
 my $name = 'run_pilon.pl';
 my $updated = '2024-02-12';
 
-use strict; use warnings; use Getopt::Long qw(GetOptions); use File::Basename;
+use strict;
+use warnings;
+use Getopt::Long qw(GetOptions);
+use File::Basename;
 
-## Defining options
+#########################################################################
+### Command line options
+#########################################################################
+
 my $usage = <<"USAGE";
-NAME		${name}
-VERSION		${version}
-UPDATED		${updated}
-SYNOPSIS	Runs pilon read correction in paired-end mode for X iterations (stops automatically 
-		if Pilon no longer makes changes to the consensus)
+NAME        ${name}
+VERSION     ${version}
+UPDATED     ${updated}
+SYNOPSIS    Runs pilon read correction in paired-end mode for X iterations:
+            stops automatically if Pilon no longer makes consensus changes 
 
-REQUIREMENTS	SAMtools; minimap2; pilon
+REQS        Samtools - https://www.htslib.org/
+            minimap2 - https://github.com/lh3/minimap2
+            pilon - https://github.com/broadinstitute/pilon
 
-EXAMPLE		run_pilon.pl \\
-		  -f polished_genome_flye.fasta \\
-		  -pe1 EEint_S1_L001_R1_001.fastq \\
-		  -pe2 EEint_S1_L001_R2_001.fastq \\
-		  -r 10 \\
-		  -p /opt/pilon/pilon-1.22.jar \\
-		  -t 64
+EXAMPLE     ${name} \\
+              -f polished_genome_flye.fasta \\
+              -pe1 EEint_S1_L001_R1_001.fastq \\
+              -pe2 EEint_S1_L001_R2_001.fastq \\
+              -r 10 \\
+              -p /opt/pilon/pilon-1.22.jar \\
+              -t 64
 
 OPTIONS:
--f (--fasta)	Genome assembly in FASTA format
--pe1		Illumina R1 file in FASTQ format
--pe2		Illumina R2 file in FASTQ format
--r (--rounds)	Number of pilon iterations [Default: 10]
--p (--pilon)	Path to pilon jar file [Default: /opt/pilon-1.24/pilon-1.24.jar]
--t (--threads)	Number of threads [Default: 16]
--g (--Gb)	Amount of RAM (in Gb) to allocate to pilon jar file [Default: 16]
--o (--outdir)	Output directory [Default: ./]
--d (--diploid)	Turn on Pilon's --diploid flag
+-f (--fasta)     Genome assembly in FASTA format
+-pe1             Illumina R1 file in FASTQ format
+-pe2             Illumina R2 file in FASTQ format
+-r (--rounds)    Number of pilon iterations [Default: 10]
+-p (--pilon)     Path to pilon jar file [Default: /opt/pilon-1.24/pilon-1.24.jar]
+-t (--threads)   Number of threads [Default: 16]
+-g (--Gb)        Amount of RAM (in Gb) to allocate to pilon jar file [Default: 16]
+-o (--outdir)    Output directory [Default: ./]
+-d (--diploid)   Turn on Pilon's --diploid flag
+-v (--version)   Show script version
 USAGE
-die "\n$usage\n" unless @ARGV;
+
+unless (@ARGV){
+    print "\n$usage\n";
+    exit(0);
+};
+
 my @commands = @ARGV;
 
 my $fasta;
@@ -47,27 +62,51 @@ my $threads = 16;
 my $ram = 16;
 my $outdir = './';
 my $diploid;
+my $sc_version;
 GetOptions(
-	'f|fasta=s' => \$fasta,
-	'pe1=s' => \$pe1,
-	'pe2=s' => \$pe2,
-	'r|rounds=i' => \$rounds,
-	'p|pilon=s' => \$pilon,
-	't|threads=i' => \$threads,
-	'g|Gb=i' => \$ram,
-	'o|outdir=s' => \$outdir,
-	'd|diploid' => \$diploid
+    'f|fasta=s' => \$fasta,
+    'pe1=s' => \$pe1,
+    'pe2=s' => \$pe2,
+    'r|rounds=i' => \$rounds,
+    'p|pilon=s' => \$pilon,
+    't|threads=i' => \$threads,
+    'g|Gb=i' => \$ram,
+    'o|outdir=s' => \$outdir,
+    'd|diploid' => \$diploid,
+    'v|version' => \$sc_version
 );
 
-## Checking output directory and log file
-unless (-d $outdir) {
-	mkdir ($outdir,0755) or die "Can't create $outdir: $!\n";
+#########################################################################
+### Version
+#########################################################################
+
+if ($sc_version){
+    print "\n";
+    print "Script:     $name\n";
+    print "Version:    $version\n";
+    print "Updated:    $updated\n\n";
+    exit(0);
 }
-open LOG, ">", "$outdir/pilon.log" or die "Can't create $outdir/pilon.log: $!\n";
+
+#########################################################################
+### Output directory + log file
+#########################################################################
+
+unless (-d $outdir) {
+    mkdir ($outdir,0755) or die "Can't create $outdir: $!\n";
+}
+
+my $logfile = $outdir.'/pilon.log';
+open LOG, ">", $logfile or die "Can't create $logfile: $!\n";
+
 my $timestamp = `date`;
 chomp $timestamp;
 print LOG "Ran pilon on $timestamp with $name version $version\n\n";
 print LOG "COMMAND: $name @commands\n";
+
+#########################################################################
+### Minimap2 + pilon iterations
+#########################################################################
 
 ## Basename + variables
 my ($file, $path) = fileparse($fasta);
@@ -88,7 +127,7 @@ system "samtools index $bam_sorted ";
 
 my $diploid_flag = '';
 if ($diploid){
-	$diploid_flag = '--diploid';
+    $diploid_flag = '--diploid';
 }
 
 # Pilon round no. 1
@@ -109,48 +148,57 @@ system "mv $round/round1.clean.fasta $round/round1.fasta";
 # Subsequent rounds
 my $prev;
 my $num;
+
 if ($rounds >= 2){
-	for $num (2..($rounds)){
-		$prev = $num - 1;
 
-		## Checking if changes were made in the previous iteration. If not, stop.
-		my $filename = "${outdir}/round${prev}/round${prev}.changes";
-		my $size = -s $filename;
-		last if ($size == 0);
-		system "mv ${outdir}/round${prev}.sorted.bam ${outdir}/round${prev}.sorted.bam.bai $outdir/round${prev}/";
+    for $num (2..($rounds)){
 
-		## Naming files again
-		$sam_file = "$outdir/round${num}.sam";
-		$bam_unsorted = "$outdir/round${num}.bam";
-		$bam_sorted = "$outdir/round${num}.sorted.bam";
-		$round = "$outdir/round${num}";
+        $prev = $num - 1;
 
-		### Running additional pilon iterations if changes were made in the previous iteration
-		# BAM round 2+
-		system "minimap2 -t $threads -R \@RG\\\\tID:$pe1\\\\tSM:$fasta -ax sr ${outdir}/round${prev}/round${prev}.fasta $pe1 $pe2 1> $sam_file";
-		system "samtools view -@ $threads -bS $sam_file -o $bam_unsorted";
-		system "samtools sort -@ $threads -o $bam_sorted $sam_file";
-		system "rm $bam_unsorted $sam_file"; ## Discarding unsorted BAM/SAM files
-		system "samtools index $bam_sorted";
+        ## Checking if changes were made in the previous iteration. If not, stop.
+        my $filename = "${outdir}/round${prev}/round${prev}.changes";
+        my $size = -s $filename;
+        last if ($size == 0);
+        system "mv ${outdir}/round${prev}.sorted.bam ${outdir}/round${prev}.sorted.bam.bai $outdir/round${prev}/";
 
-		# Pilon round 2+
-		system "java \\
-		  -Xmx${ram}G \\
-		  -jar $pilon \\
-		  $diploid_flag \\
-		  --genome ${outdir}/round${prev}/round${prev}.fasta \\
-		  --frags $bam_sorted \\
-		  --output round${num} \\
-		  --outdir $round \\
-		  --changes";
+        ## Naming files again
+        $sam_file = "$outdir/round${num}.sam";
+        $bam_unsorted = "$outdir/round${num}.bam";
+        $bam_sorted = "$outdir/round${num}.sorted.bam";
+        $round = "$outdir/round${num}";
 
-		# Cleanup
-		system "sed 's/_pilon//g' $round/round${num}.fasta > $round/round${num}.clean.fasta";
-		system "mv $round/round${num}.clean.fasta $round/round${num}.fasta";
-	}
+        ### Running additional pilon iterations if changes were made in the previous iteration
+        # BAM round 2+
+        system "minimap2 -t $threads -R \@RG\\\\tID:$pe1\\\\tSM:$fasta -ax sr ${outdir}/round${prev}/round${prev}.fasta $pe1 $pe2 1> $sam_file";
+        system "samtools view -@ $threads -bS $sam_file -o $bam_unsorted";
+        system "samtools sort -@ $threads -o $bam_sorted $sam_file";
+        system "rm $bam_unsorted $sam_file"; ## Discarding unsorted BAM/SAM files
+        system "samtools index $bam_sorted";
+
+        # Pilon round 2+
+        system "java \\
+          -Xmx${ram}G \\
+          -jar $pilon \\
+          $diploid_flag \\
+          --genome ${outdir}/round${prev}/round${prev}.fasta \\
+          --frags $bam_sorted \\
+          --output round${num} \\
+          --outdir $round \\
+          --changes";
+
+        # Cleanup
+        system "sed 's/_pilon//g' $round/round${num}.fasta > $round/round${num}.clean.fasta";
+        system "mv $round/round${num}.clean.fasta $round/round${num}.fasta";
+
+    }
+
 }
+
 print "No changes after Pilon iteration # $prev. Stopping subsequent iterations.\n";
 
-# Final cleanup
+#########################################################################
+### Final cleanup
+#########################################################################
+
 system "mv ${outdir}/round${prev}.sorted.bam ${outdir}/round${prev}.sorted.bam.bai $outdir/round${prev}/";
 system "cp $outdir/round${prev}/round${prev}.fasta $outdir/$file.pilon.fasta";
