@@ -11,8 +11,8 @@ Parses multifasta files by their GC content. Useful to parse out contaminants fr
 
 [`read_len_plot.py`](https://github.com/PombertLab/Misc/blob/main/read_len_plot.py): Plots the read length distribution for a given FASTQ dataset with matplotlib.
 
+[`run_pilon.pl`](https://github.com/PombertLab/Misc/blob/main/run_pilon.pl): Runs [Pilon](http://software.broadinstitute.org/software/pilon/) read correction in paired-end mode for X iterations (stops automatically if Pilon no longer makes changes to the consensus)
+
 [`runTaxonomizedBLAST.pl`](https://github.com/PombertLab/Misc/blob/main/runTaxonomizedBLAST.pl): Runs taxonomized [BLAST](https://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download) searches, and returns the outfmt 6 format with columns staxids, sscinames, sskingdoms, and sblastnames.
 
-[`parseTaxonomizedBLAST.pl`](https://github.com/PombertLab/Misc/blob/main/parseTaxonomizedBLAST.pl): Parses the content of taxonomized [BLAST](https://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download) searches performed with [runTaxonomizedBLAST.pl](https://github.com/PombertLab/Misc/blob/main/runTaxonomizedBLAST.pl).
-
-[`run_pilon.pl`](https://github.com/PombertLab/Misc/blob/main/run_pilon.pl): Runs [Pilon](http://software.broadinstitute.org/software/pilon/) read correction in paired-end mode for X iterations (stops automatically if Pilon no longer makes changes to the consensus)
+[`parseTaxonomizedBLAST.pl`](https://github.com/PombertLab/Misc/blob/main/parseTaxonomizedBLAST.pl): Parses the content of [BLAST](https://blast.ncbi.nlm.nih.gov/Blast.cgi?PAGE_TYPE=BlastDocs&DOC_TYPE=Download) searches performed with `runTaxonomizedBLAST.pl`.
